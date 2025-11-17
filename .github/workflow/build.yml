@@ -1,0 +1,19 @@
+name: C++ Build
+# Run this workflow on every pull request to the 'main' branch
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    # Use a standard Ubuntu (Linux) machine for the test
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Check out the code from the pull request
+    - uses: actions/checkout@v3
+
+    # Step 2: Run the 'make' command
+    # This is the command that must succeed.
+    - name: Build with Make
+      run: make
