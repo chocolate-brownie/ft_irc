@@ -1,4 +1,3 @@
-
 ### 🐙 Git: Using Branching Workflow
 
 We have a team of three. If you all push to the `main` (or `master`) branch, you will overwrite each other's work and create a nightmare of merge conflicts. 🤯
