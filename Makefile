@@ -6,7 +6,7 @@ SRCS_DIR = src
 OBJ_DIR = obj
 
 # List of subdirectories to include
-DIRS = . 1_network 2_parser 3_commands
+DIRS = . 1_network 2_parser 3_commands utils
 
 # Find all .cpp files in the specified directories
 SRCS = $(foreach dir, $(DIRS), $(wildcard $(SRCS_DIR)/$(dir)/*.cpp))
