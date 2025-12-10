@@ -1,43 +1,23 @@
 Language:        Cpp
 BasedOnStyle:    LLVM
+Standard:        c++98
 IndentWidth:     4
 TabWidth:        4
 UseTab:          Never
-Standard:        c++03
 
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass:             false
-  AfterControlStatement:  true
-  AfterEnum:              false
-  AfterFunction:          true
-  AfterNamespace:         false
-  AfterStruct:            false
-  AfterUnion:             false
-  AfterExternBlock:       false
-  BeforeElse:             true
-  IndentBraces:           false
-
-AccessModifierOffset:     -4
-IndentCaseLabels:         true
-ConstructorInitializerIndentWidth: 4
-
-AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
+# Braces on new lines (Allman style)
+BreakBeforeBraces: Allman
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
 
-AlwaysBreakTemplateDeclarations: Yes
-SpacesBeforeTrailingComments: 2
-ReflowComments: true
+# Spacing
+ColumnLimit:     80
+AccessModifierOffset: -4
+IndentCaseLabels: true
+SpaceAfterCStyleCast: false
 PointerAlignment: Left
 
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-SortIncludes: false
-IndentGotoLabels: true
-SpaceAfterCStyleCast: true
-AlignEscapedNewlines: Right
-ColumnLimit: 100
+# Alignment
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+SortIncludes:    true
+
