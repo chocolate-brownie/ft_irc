@@ -7,20 +7,29 @@ Server::~Server() {}
 
 void Server::start() {
   struct addrinfo *servinfo = getAddressInfo();
-  int sockfd = createAndBindTheSocket(servinfo);
+  _serverSocketFd = createAndBindTheSocket(servinfo);
 
   /* backlog is the number of connections allowed on the incoming queue. What
    * does that mean? Well, incoming connections are going to wait in this queue
    * until you accept() them (see below) and this is the limit on how many can
    * queue up. Most systems silently limit this number to about 20; you can
    * probably get away with setting it to 5 or 10.*/
-  if (listen(sockfd, 5) != 0) {
+  if (listen(_serverSocketFd, BACKLOG) != 0) {
     std::cerr << "Error: Listening failed" << std::endl;
     freeaddrinfo(servinfo);
     exit(1);
   }
 
-  // acceptAConnection();
+  struct sockaddr_storage their_addr; // connector's address info
+  socklen_t addr_size;
+  int new_fd;
+
+  /* For the moment I will accept the connection thinking that more than one
+   * client would not try to connect to the server*/
+  addr_size = sizeof(their_addr);
+  new_fd = accept(_serverSocketFd, (struct sockaddr *)&their_addr, &addr_size);
+  if (new_fd == -1)
+    std::cerr << "Error: accept failed: " << std::strerror(errno) << std::endl;
   // sendAndReceiveData();
   // disconnectTheSocket();
 
@@ -42,7 +51,7 @@ struct addrinfo *Server::getAddressInfo() {
 
   std::string portStr = portToString(_port);
 
-  if ((status = getaddrinfo(NULL, portStr.c_str(), &hints, &res)) != 0) {
+  if ((status = getaddrinfo(NULL, portStr.c_str(), &hints, &res)) == -1) {
     std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
     exit(1);
   }
@@ -51,17 +60,17 @@ struct addrinfo *Server::getAddressInfo() {
 
 int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
   struct addrinfo *p;
-  int socket_fd;
+  int fd;
   for (p = servinfo; p != NULL; p = p->ai_next) {
-    socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-    if (socket_fd == -1) {
+    fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+    if (fd == -1) {
       std::cerr << "Error: Socket creation failed, trying next..." << std::endl;
       continue;
     }
 
-    if (bind(socket_fd, p->ai_addr, p->ai_addrlen) != 0) {
+    if (bind(fd, p->ai_addr, p->ai_addrlen) == -1) {
       std::cerr << "Error: Binding failed for the current socket" << std::endl;
-      close(socket_fd);
+      close(fd);
       continue;
     }
 
@@ -73,5 +82,5 @@ int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
     exit(1);
   }
 
-  return socket_fd;
+  return fd;
 }
