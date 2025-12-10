@@ -1,6 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#define BACKLOG 10
+
 #include <arpa/inet.h>
 #include <cstdio>   // IWYU pragma: keep
 #include <cstdlib>  // IWYU pragma: keep
