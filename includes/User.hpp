@@ -1,0 +1,46 @@
+#ifndef USER_HPP
+#define USER_HPP
+
+#include <arpa/inet.h>
+#include <cstdio>   // IWYU pragma: keep
+#include <cstdlib>  // IWYU pragma: keep
+#include <cstring>  // IWYU pragma: keep
+#include <iostream> // IWYU pragma: keep
+#include <netdb.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sstream> // IWYU pragma: keep
+#include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <vector> // IWYU pragma: keep
+
+class User 
+{
+	private:
+		std::string		_username;
+ 		std::string		_nick;
+		int 			_userSocketFd;
+
+		bool			_isOperator;
+		bool			_isRegistered;
+
+	public:
+  		User(int fd);
+  		User(const User &other);
+  		User &operator=(const User &other);
+  		~User();
+
+		bool	isOperator() const;
+		bool	isRegistered() const;
+		void	setOperator(bool val);
+		void	setRegistered(bool val);
+};
+
+//  We could make an operator class that inherits from User, but then to distinguish a normal
+//	user from an operator during run-time we should use some dynamic casting and it seems too complicated for nothing.
+//	Also inside of the child class operator we wouldn't really have any extra values to store or 
+
+
+#endif
