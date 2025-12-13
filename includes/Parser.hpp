@@ -6,10 +6,20 @@
 #include <sstream>
 #include <exception>
 
+#define KICK 1
+#define INVITE 2
+#define TOPIC 3
+#define MODE 4
+#define JOIN 5
+#define PRIVMSG 6
+#define NICK 7
+#define USER 8
+
 struct ParsedCommand {
 	std::string command;              // e.g., "JOIN"
 	std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
-	bool isValid; // maybe no need
+	bool IsPrMsgtoChannel;
+	int cmd_code;
 };
 
 class Parser {
