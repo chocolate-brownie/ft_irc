@@ -30,6 +30,11 @@ void Server::start() {
   new_fd = accept(_serverSocketFd, (struct sockaddr *)&their_addr, &addr_size);
   if (new_fd == -1)
     std::cerr << "Error: accept failed: " << std::strerror(errno) << std::endl;
+
+  std::cout << "✅ A client successfully connected! (FD: " << new_fd << ")"
+            << std::endl;
+  close(new_fd);
+
   // sendAndReceiveData();
   // disconnectTheSocket();
 
