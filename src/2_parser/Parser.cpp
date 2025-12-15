@@ -19,8 +19,11 @@ ParsedCommand Parser::split(const std::string& input) {
 	// PREFIX
 	if (input[pos] == ':')
 		throw std::invalid_argument("Prefix in input");
+	else if (pos == std::string::npos)
+		throw std::invalid_argument("Only spaces");
 
-	std::stringstream ss(input);
+	std::string trimmed = input.substr(pos);
+	std::stringstream ss(trimmed);
 
 	// COMMAND
 	if (!(ss >> pc.command))
@@ -30,13 +33,14 @@ ParsedCommand Parser::split(const std::string& input) {
 	std::string token;
 	while (ss >> token) {
 		if (token[0] == ':') { // trailing param starts
-			std::string trailing = token.substr(1);  // remove ':'
-			std::string next;
-			while (ss >> next) {
-				trailing += " " + next;
-			}
+			std::string trailing = token.substr(1); //first word of the text
+			std::string rest;
+			std::getline(ss, rest); // reads everything remaining
+			trailing += rest;
+			if (trailing.empty())
+				throw std::invalid_argument("Empty trailing parameter");
 			pc.args.push_back(trailing);
-			return pc; //trailing must be the last param
+			return pc;
 		}
 		pc.args.push_back(token);
 	}
@@ -69,28 +73,84 @@ void IsValidCmd(ParsedCommand *pc) {
 	pc->cmd_code = i;
 }
 
+// TOPIC <channel> [<topic>]
+// TOPIC #help :We help with C++ IRC projects
+// TOPIC #strangers
+void IsValid_TOPIC(ParsedCommand *pc) {
+	if (pc->args.empty() || pc->args.size() > 2)
+		throw std::invalid_argument("Wrong number of parameters for a topic");
+	if (pc->args[0][0] != '#' || (pc->args[0][0] == '#' && pc->args[0].size() == 1))
+		throw std::invalid_argument("Wrong channel for a topic");
+	if (pc->args.size() == 2) {
+		for (int i = 0; i < pc->args[1].size(); i++) {
+			if (!std::isprint(pc->args[1][i]))
+				throw std::invalid_argument("Unprintable character in topic text");
+		}
+	}
+}
+
+// PRIVMSG <receiver>{,<receiver>} <text to be sent>
 // PRIVMSG #help :Hello, I need help
 // PRIVMSG Bob :Can you review my code?
-// TOPIC #help :We help with C++ IRC projects
-void IsValid_PRIVMSG_TOPIC(ParsedCommand *pc, int msg) {
+void IsValid_PRIVMSG(ParsedCommand *pc) {
 	if (pc->args.empty() || pc->args.size() != 2)
-		throw std::invalid_argument("Wrong number of parameters");
-	if (pc->args[0][0] == '#' && msg) // private msg to a channel
-		pc->IsPrMsgtoChannel = true;
-	else if (pc->args[0][0] != '#' && !msg) // topic without channel
-		throw std::invalid_argument("Wrong channel");
-	if (pc->args[1].empty())
-		throw std::invalid_argument("No text");
+		throw std::invalid_argument("Wrong number of parameters for a message");
 	for (int i = 0; i < pc->args[1].size(); i++) {
 		if (!std::isprint(pc->args[1][i]))
-			throw std::invalid_argument("Unprintable character in text");
+			throw std::invalid_argument("Unprintable character in message text");
 	}
+}
+
+// KICK <channel> <user> [<comment>]
+// KICK #42 Enrico :for being too pretty
+// KICK #help smartass
+void IsValid_KICK(ParsedCommand *pc) {
+	if (pc->args.empty() || (pc->args.size() != 2 && pc->args.size() != 3))
+		throw std::invalid_argument("Wrong number of parameters for a kick");
+	if (pc->args[0][0] != '#' || (pc->args[0][0] == '#' && pc->args[0].size() == 1))
+		throw std::invalid_argument("Wrong channel for a kick");
+	if (pc->args[1][0] == '#')
+		throw std::invalid_argument("Wrong user for a kick");
+	if (pc->args.size() == 3) {
+		for (int i = 0; i < pc->args[2].size(); i++) {
+			if (!std::isprint(pc->args[2][i]))
+				throw std::invalid_argument("Unprintable character in kick comment");
+		}
+	}
+}
+
+// INVITE <nickname> <channel>
+// INVITE little_rat #trap
+void IsValid_INVITE(ParsedCommand *pc) {
+	if (pc->args.empty() || pc->args.size() != 2)
+		throw std::invalid_argument("Wrong number of parameters for an invite");
+	if (pc->args[0][0] == '#')
+		throw std::invalid_argument("Wrong user for an invite");
+	if (pc->args[1][0] != '#' || (pc->args[1][0] == '#' && pc->args[1].size() == 1))
+		throw std::invalid_argument("Wrong channel for an invite");
+}
+
+// JOIN <channel> [<key>]
+// JOIN #family
+// JOIN #project 123456
+void IsValid_JOIN(ParsedCommand *pc) {
+	if (pc->args.empty() || pc->args.size() > 2)
+		throw std::invalid_argument("Wrong number of parameters for a join");
+	if (pc->args[0][0] != '#' || (pc->args[0][0] == '#' && pc->args[0].size() == 1))
+		throw std::invalid_argument("Wrong channel for a join");
+}
+
+// NICK <nickname>
+// NICK PrettyCat2001
+void IsValid_NICK(ParsedCommand *pc) {
+	if (pc->args.empty() || pc->args.size() != 1)
+		throw std::invalid_argument("Wrong number of parameters to set a nickname");
+	//nickname rules
 }
 
 ParsedCommand Parser::parse(const std::string& input) {
 	ParsedCommand pc;
-	pc.IsPrMsgtoChannel = false;
-	pc.cmd_code = 0;
+	pc.cmd_code = 0; // maybe extract from structure
 
 	try {
 		pc = split(input);
@@ -98,16 +158,24 @@ ParsedCommand Parser::parse(const std::string& input) {
 		switch (pc.cmd_code) // parsing depending on command
 		{
 			case KICK:
+				IsValid_KICK(&pc);
+				break;
 			case INVITE:
+				IsValid_INVITE(&pc);
+				break;
 			case TOPIC:
-				IsValid_PRIVMSG_TOPIC(&pc, 0);
+				IsValid_PRIVMSG(&pc);
 				break;
 			case MODE:
 			case JOIN:
+				IsValid_JOIN(&pc);
+				break;
 			case PRIVMSG:
-				IsValid_PRIVMSG_TOPIC(&pc, 1);
+				IsValid_TOPIC(&pc);
 				break;
 			case NICK:
+				IsValid_NICK(&pc);
+				break;
 			case USER:
 			default:
 		}
