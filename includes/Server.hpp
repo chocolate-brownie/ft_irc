@@ -18,24 +18,52 @@
 #include <unistd.h>
 #include <vector> // IWYU pragma: keep
 
-class Server {
+#include <map>
+
+#include "Channel.hpp"
+#include "Parser.hpp"
+#include "User.hpp"
+
+class Server
+{
 private:
-  int _port;
-  std::string _password;
-  int _serverSocketFd;
+    int _port;
+    std::string _password;
+    int _serverSocketFd;
 
-  Server(const Server &other);
-  Server &operator=(const Server &other);
+    std::vector<Channel*> _channels;
+    std::vector<User*> _users;
 
-  std::string portToString(int port);
-  struct addrinfo *getAddressInfo();
-  int createAndBindTheSocket(struct addrinfo *servinfo);
+    Server(const Server& other);
+    Server& operator=(const Server& other);
+
+    std::string portToString(int port);
+    struct addrinfo* getAddressInfo();
+    int createAndBindTheSocket(struct addrinfo* servinfo);
+
+    // Type definition for a pointer to a member function of the Server class
+    typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
+    std::map<std::string, CommandFunction> _commandMap;
 
 public:
-  Server(int port, std::string password);
-  ~Server();
+    Server(int port, std::string password);
+    ~Server();
 
-  void start();
+    void start();
+
+    void executeCommand(User& user, const ParsedCommand& cmd);
+
+    void cmdKick(User& user, const ParsedCommand& cmd);
+    void cmdInvite(User& user, const ParsedCommand& cmd);
+    void cmdTopic(User& user, const ParsedCommand& cmd);
+    void cmdMode(User& user, const ParsedCommand& cmd);
+    void cmdJoin(User& user, const ParsedCommand& cmd);
+    void cmdPrivmsg(User& user, const ParsedCommand& cmd);
+    void cmdNick(User& user, const ParsedCommand& cmd);
+    void cmdUser(User& user, const ParsedCommand& cmd);
+    void cmdPart(User& user, const ParsedCommand& cmd);
+
+    Channel* getChannel(const std::string& name);
 };
 
 #endif

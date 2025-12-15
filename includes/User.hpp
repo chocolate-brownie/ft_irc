@@ -16,31 +16,40 @@
 #include <unistd.h>
 #include <vector> // IWYU pragma: keep
 
-class User 
+#include "Server.hpp"
+
+class User
 {
-	private:
-		std::string		_username;
- 		std::string		_nick;
-		int 			_userSocketFd;
+private:
+    std::string _username;
+    std::string _nick;
+    int _userSocketFd;
+    std::vector<Channel*> _channels;
 
-		bool			_isOperator;
-		bool			_isRegistered;
+    bool _isOperator;
+    bool _isRegistered;
 
-	public:
-  		User(int fd);
-  		User(const User &other);
-  		User &operator=(const User &other);
-  		~User();
+public:
+    User(int fd);
+    User(const User& other);
+    User& operator=(const User& other);
+    ~User();
 
-		bool	isOperator() const;
-		bool	isRegistered() const;
-		void	setOperator(bool val);
-		void	setRegistered(bool val);
+    int getFd() const;
+    std::string getNick() const;
+    std::string getUsername() const;
+    bool isOperator() const;
+    bool isRegistered() const;
+    void setOperator(bool val);
+    void setRegistered(bool val);
+    void setNick(std::string nick);
+    void setUsername(std::string username);
 };
 
-//  We could make an operator class that inherits from User, but then to distinguish a normal
-//	user from an operator during run-time we should use some dynamic casting and it seems too complicated for nothing.
-//	Also inside of the child class operator we wouldn't really have any extra values to store or 
-
+//  We could make an operator class that inherits from User, but then to
+//  distinguish a normal
+//	user from an operator during run-time we should use some dynamic casting and
+// it seems too complicated for nothing. 	Also inside of the child class
+// operator we wouldn't really have any extra values to store or
 
 #endif
