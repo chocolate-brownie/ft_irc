@@ -1,4 +1,6 @@
 #include "../../includes/Server.hpp"
+#include <asm-generic/socket.h>
+#include <sys/socket.h>
 
 Server::Server(int port, std::string password)
     : _port(port), _password(password) {}
@@ -66,15 +68,20 @@ struct addrinfo *Server::getAddressInfo() {
 int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
   struct addrinfo *p;
   int fd;
+  int yes = 1;
   for (p = servinfo; p != NULL; p = p->ai_next) {
-    fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-    if (fd == -1) {
-      std::cerr << "Error: Socket creation failed, trying next..." << std::endl;
+    if ((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+      std::cerr << "server: socket" << std::endl;
       continue;
     }
 
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+      std::cerr << "setsockopt" << std::endl;
+      exit(1);
+    }
+
     if (bind(fd, p->ai_addr, p->ai_addrlen) == -1) {
-      std::cerr << "Error: Binding failed for the current socket" << std::endl;
+      std::cerr << "server: bind" << std::endl;
       close(fd);
       continue;
     }
@@ -82,8 +89,10 @@ int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
     break; // Success!
   }
 
+  freeaddrinfo(servinfo);
+
   if (p == NULL) {
-    std::cerr << "Error: Failed to bind anything" << std::endl;
+    std::cerr << "server: failed to bind" << std::endl;
     exit(1);
   }
 
