@@ -1,8 +1,7 @@
 #include "../../includes/User.hpp"
 
-User::User(int fd) : _userSocketFd(fd), _isOperator(false), _isRegistered(false)
-{
-}
+User::User(int fd) : _userSocketFd(fd), _isOperator(false), _isRegistered(false) 
+{}
 
 User::~User()
 {
@@ -11,6 +10,25 @@ User::~User()
          it != _channels.end(); ++it)
         (*it)->removeUser(*this);
     _channels.clear();
+}
+
+// CHANNELS RELATED
+void User::addChannel(Channel& channel)
+{
+	_channels.push_back(&channel);
+}
+
+void User::removeChannel(Channel& channel)
+{
+	for (std::vector<Channel*>::iterator it = _channels.begin();
+		it != _channels.end(); it++)
+	{
+		if (*it == &channel)
+		{
+			_channels.erase(it);
+			return;
+		}
+	}
 }
 
 // GETTERS & SETTERS

@@ -12,44 +12,79 @@ Channel* Server::getChannel(const std::string& name)
     return (NULL);
 }
 
+void	Server::print_error(int id, User* user, Channel* channel)
+{
+	std::string	msg = ":BBCServer " + std::to_string(id) + " ";
+	switch (id)
+	{
+	case ERR_NOSUCHNICK:
+		msg += user->getNick() + ": user not found\n";
+		break;
+	case ERR_NICKALREADYUSE:
+		msg += user->getNick() + ": nickname is already taken\n";
+		break;
+	case ERR_NOSUCHCHANNEL:
+		msg += "#" + channel->getName() + ": channel not found\n";
+		break;
+	case ERR_USERNOTINCHANNEL:
+		msg += user->getNick() + ": user not connected to the channel\n";
+		break;
+	case ERR_USERINCHANNEL:
+		msg += user->getNick() + ": user already connected to the channel\n";
+		break;
+	case ERR_NOTREGISTERED:
+		msg += user->getNick() + ": user not registered\n";
+		break;
+	case ERR_CHANNELISFULL:
+		msg += "#" + channel->getName() + ": channel full\n";;
+		break;
+	case ERR_INVITEONLYCHAN:
+		msg += "#" + channel->getName() + ": invite needed to \n";;
+		break;
+	case ERR_BADCHANNELKEY:
+		msg += "#" + channel->getName() + ": invalid channel key\n";
+		break;
+	case ERR_NOPRIVILEGES:
+		msg += user->getNick() + ": permission denied, operator status required\n";
+		break;
+	default:
+		msg = "[UNKNOWN ERROR]\n";
+		break;
+	}
+	send(user->getFd(), msg.c_str(), msg.length(), 0);
+}
+
+
 void Server::cmdKick(User& user, const ParsedCommand& cmd)
 {
     Channel* channel;
     User* target;
     std::string reply;
 
-    // Checks argument size   NB MAYBE IRINA ALREADY CHECKS THIS
-    if (cmd.args.size() < 2)
-    {
-        reply = user.getNick() + " KICK :Not enough parameters\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
-        return;
-    }
     // Checks if user is operator, if channel exists and if the target user is
     // in the channel
     if (!user.isOperator())
     {
-        reply = user.getNick() + " :Operator permission required\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_NOPRIVILEGES, &user, NULL);
         return;
     }
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        reply = cmd.args[0] + " :No such channel\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_NOSUCHCHANNEL, NULL, channel);
         return;
     }
     if (!(target = channel->isUserConnected(cmd.args[1])))
     {
-        reply = cmd.args[1] + " :The user is not connected to the channel\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_USERNOTINCHANNEL, target, NULL);
         return;
     }
-
+	// When kicking user we remove him from the channel list and vice versa we
+	// remove the channel from his list, and broadcast the message to inform the channel 
     reply = user.getNick() + " KICK #" + channel->getName() + " " +
             target->getNick() + "\n";
     channel->broadcast(reply);
     channel->removeUser(*target);
+	target->removeChannel(*channel);
 }
 
 void Server::cmdInvite(User& user, const ParsedCommand& cmd)
@@ -58,32 +93,21 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd)
     User* target;
     std::string reply;
 
-    // MAYBE IRINA CHECK THIS ALREADY
-    if (cmd.args.size() < 2)
-    {
-        reply = user.getNick() + " INVITE :Not enough parameters\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
-        return;
-    }
     // Checks if channel exists and if the target user is
     // not already in the channel
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        reply = "#" + cmd.args[0] + " : Channel not found\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_NOSUCHCHANNEL, NULL, channel);
         return;
     }
     if ((target = channel->isUserConnected(cmd.args[1])))
     {
-        reply =
-            cmd.args[1] + " :The user is already connected to the channel\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_USERNOTINCHANNEL, target, NULL);
         return;
     }
     if (!(channel->isUserConnected(user.getNick())))
     {
-        reply = user.getNick() + " :You're not connected to the channel\n";
-        send(user.getFd(), reply.c_str(), reply.length(), 0);
+		print_error(ERR_USERNOTINCHANNEL, &user, NULL);
         return;
     }
 
@@ -103,11 +127,8 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd)
     else
     {
         if (!(user.isOperator()))
-        {
-            reply = user.getNick() + " :Operator permissions needed\n";
-            send(user.getFd(), reply.c_str(), reply.length(), 0);
-            return;
-        }
+			print_error(ERR_NOPRIVILEGES, &user, NULL);
+        return;
     }
 }
 

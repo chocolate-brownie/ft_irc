@@ -35,12 +35,19 @@ public:
     User& operator=(const User& other);
     ~User();
 
+	// CHANNELS RELATED
+	void addChannel(Channel& channel);
+    void removeChannel(Channel& channel);
+
+	// GETTERS
     int getFd() const;
     std::string getNick() const;
     std::string getUsername() const;
     bool isOperator() const;
     bool isRegistered() const;
-    void setOperator(bool val);
+    
+	// SETTERS
+	void setOperator(bool val);
     void setRegistered(bool val);
     void setNick(std::string nick);
     void setUsername(std::string username);

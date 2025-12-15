@@ -20,6 +20,17 @@
 
 #include <map>
 
+#define ERR_NOSUCHNICK          401
+#define ERR_NICKALREADYUSE      402
+#define ERR_NOSUCHCHANNEL       403
+#define ERR_USERNOTINCHANNEL    441
+#define ERR_USERINCHANNEL       443
+#define ERR_NOTREGISTERED       451
+#define ERR_CHANNELISFULL       471
+#define ERR_INVITEONLYCHAN      473
+#define ERR_BADCHANNELKEY       475
+#define ERR_NOPRIVILEGES        481
+
 #include "Channel.hpp"
 #include "Parser.hpp"
 #include "User.hpp"
@@ -44,6 +55,8 @@ private:
     // Type definition for a pointer to a member function of the Server class
     typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
     std::map<std::string, CommandFunction> _commandMap;
+
+	void	print_error(int id, User* user, Channel* channel);
 
 public:
     Server(int port, std::string password);

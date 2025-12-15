@@ -82,7 +82,6 @@ void Channel::removeUser(User& user)
 
 void Channel::addOperator(User& user)
 {
-
     _operators.push_back(&user);
 }
 
