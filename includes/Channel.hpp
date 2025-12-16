@@ -50,6 +50,7 @@ public:
     User* isUserConnected(const std::string& nick) const;
 	void addUser(User& user);
     void removeUser(User& user);
+	std::string	getUserList() const;
 
 	// OPERATORS
     void addOperator(User& client);

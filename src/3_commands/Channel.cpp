@@ -73,13 +73,26 @@ void Channel::addUser(User& user)
 void Channel::removeUser(User& user)
 {
     for (std::vector<User*>::iterator it = _users.begin(); it != _users.end();
-         ++it)
+         it++)
     {
         if ((*it) == &user)
         {
             _users.erase(it);
             return;
         }
+    }
+}
+
+std::string Channel::getUserList() const
+{
+    std::string list = "";
+
+    for (std::vector<User*>::const_iterator it = _users.begin();
+         it != _users.end(); it++)
+    {
+		if ((*it)->isOperator())
+			list += "@";
+        list += (*it)->getNick();
     }
 }
 
