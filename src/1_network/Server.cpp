@@ -1,6 +1,4 @@
 #include "../../includes/Server.hpp"
-#include <iostream>
-#include <sys/poll.h>
 
 Server::Server(int port, std::string password)
     : _port(port), _password(password), _fdsize(5) {}
@@ -23,8 +21,8 @@ void Server::start() {
 
   // Main loop
   for (;;) {
-    int poll_count;
-    if ((poll_count = poll(_pfds.data(), _pfds.size(), -1)) == -1) {
+    int ret;
+    if ((ret = poll(_pfds.data(), _pfds.size(), -1)) == -1) {
       std::cerr << "poll failed" << std::endl;
     }
 
@@ -100,7 +98,7 @@ int Server::getListenerSocket() {
     exit(1);
   }
 
-  if (listen(_listener, BACKLOG) != 0) { // start listening
+  if (listen(_listener, BACKLOG) == -1) { // start listening
     std::cerr << "server: listen" << std::endl;
     exit(1);
   }
