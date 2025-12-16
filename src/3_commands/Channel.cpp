@@ -41,7 +41,7 @@ int Channel::broadcast(User& source, std::string msg)
     return (0);
 }
 
-// USER RELATED
+// USERS
 
 User* Channel::isUserConnected(User& user) const
 {
@@ -65,6 +65,11 @@ User* Channel::isUserConnected(const std::string& nick) const
     return (NULL);
 }
 
+void Channel::addUser(User& user)
+{
+    _users.push_back(&user);
+}
+
 void Channel::removeUser(User& user)
 {
     for (std::vector<User*>::iterator it = _users.begin(); it != _users.end();
@@ -78,7 +83,7 @@ void Channel::removeUser(User& user)
     }
 }
 
-// OPERATORS RELATED
+// OPERATORS
 
 void Channel::addOperator(User& user)
 {
@@ -109,7 +114,7 @@ bool Channel::isOperator(User& user) const
     return (false);
 }
 
-// INVITE RELATED
+// INVITES
 
 void Channel::addInvited(User& user)
 {

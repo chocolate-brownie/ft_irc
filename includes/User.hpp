@@ -21,9 +21,11 @@
 class User
 {
 private:
-    std::string _username;
-    std::string _nick;
     int _userSocketFd;
+    std::string _nick;     // From NICK command
+    std::string _username; // From USER command (1st arg)
+    std::string _hostname; // From USER command (2nd arg) or IP
+    std::string _realname; // From USER command (Last arg, after :)
     std::vector<Channel*> _channels;
 
     bool _isOperator;
@@ -35,28 +37,34 @@ public:
     User& operator=(const User& other);
     ~User();
 
-	// CHANNELS RELATED
-	void addChannel(Channel& channel);
+    // CHANNELS RELATED
+    void addChannel(Channel& channel);
     void removeChannel(Channel& channel);
 
-	// GETTERS
+    // GETTERS
     int getFd() const;
     std::string getNick() const;
     std::string getUsername() const;
+    std::string getHostname() const;
+    std::string getRealname() const;
+    std::string getPrefix() const;
     bool isOperator() const;
     bool isRegistered() const;
-    
-	// SETTERS
-	void setOperator(bool val);
+
+    // SETTERS
+    void setOperator(bool val);
     void setRegistered(bool val);
-    void setNick(std::string nick);
-    void setUsername(std::string username);
+    void setNick(const std::string& nick);
+    void setUsername(const std::string& username);
+    void setHostname(const std::string& host);
+    void setRealname(const std::string& real);
 };
 
-//  We could make an operator class that inherits from User, but then to
-//  distinguish a normal
-//	user from an operator during run-time we should use some dynamic casting and
-// it seems too complicated for nothing. 	Also inside of the child class
-// operator we wouldn't really have any extra values to store or
+// We could make an operator class that inherits from User, but then to
+// distinguish a normal
+// user from an operator during run-time we should use some dynamic casting and
+// it seems too complicated for nothing. Also inside of the child class
+// operator we wouldn't really have any extra values to store so its more
+// practical to just add a boolean isOperator instead
 
 #endif

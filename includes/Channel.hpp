@@ -45,17 +45,18 @@ public:
     int broadcast(std::string msg);
     int broadcast(User& source, std::string msg);
 
-	// USERS RELATED
+	// USERS
     User* isUserConnected(User& user) const;
     User* isUserConnected(const std::string& nick) const;
+	void addUser(User& user);
     void removeUser(User& user);
 
-	// OPERATORS RELATED
+	// OPERATORS
     void addOperator(User& client);
     void removeOperator(User& client);
     bool isOperator(User& client) const;
 
-	// INVITE RELATED
+	// INVITES
 	void addInvited(User& client);
     void removeInvited(User& client);
     bool isInvited(User& client) const;

@@ -20,16 +20,26 @@
 
 #include <map>
 
-#define ERR_NOSUCHNICK          401
-#define ERR_NICKALREADYUSE      402
-#define ERR_NOSUCHCHANNEL       403
-#define ERR_USERNOTINCHANNEL    441
-#define ERR_USERINCHANNEL       443
-#define ERR_NOTREGISTERED       451
-#define ERR_CHANNELISFULL       471
-#define ERR_INVITEONLYCHAN      473
-#define ERR_BADCHANNELKEY       475
-#define ERR_NOPRIVILEGES        481
+#define RPL_WELCOME 001
+#define RPL_TOPIC 332
+#define RPL_NAMREPLY 353
+#define RPL_ENDOFNAMES 366
+
+#define ERR_NOSUCHNICK 401
+#define ERR_NOSUCHCHANNEL 403
+#define ERR_CANNOTSENDTOCHAN 404
+#define ERR_UNKNOWNCOMMAND 421
+#define ERR_NICKNAMEINUSE 433
+#define ERR_USERNOTINCHANNEL 441
+#define ERR_NOTONCHANNEL 442
+#define ERR_USERONCHANNEL 443
+#define ERR_NOTREGISTERED 451
+#define ERR_NEEDMOREPARAMS 461
+#define ERR_CHANNELISFULL 471
+#define ERR_UNKNOWNMODE 472
+#define ERR_INVITEONLYCHAN 473
+#define ERR_BADCHANNELKEY 475
+#define ERR_CHANOPRIVSNEEDED 482
 
 #include "Channel.hpp"
 #include "Parser.hpp"
@@ -56,7 +66,7 @@ private:
     typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
     std::map<std::string, CommandFunction> _commandMap;
 
-	void	print_error(int id, User* user, Channel* channel);
+    void reply(int id, User* user, std::string arg1, std::string arg2);
 
 public:
     Server(int port, std::string password);
@@ -71,12 +81,13 @@ public:
     void cmdTopic(User& user, const ParsedCommand& cmd);
     void cmdMode(User& user, const ParsedCommand& cmd);
     void cmdJoin(User& user, const ParsedCommand& cmd);
-    void cmdPrivmsg(User& user, const ParsedCommand& cmd);
+    void cmdPrivmsg(User& user, ParsedCommand& cmd);
     void cmdNick(User& user, const ParsedCommand& cmd);
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
 
     Channel* getChannel(const std::string& name);
+    User* getUser(const std::string& name);
 };
 
 #endif
