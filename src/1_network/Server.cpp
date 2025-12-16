@@ -1,36 +1,49 @@
 #include "../../includes/Server.hpp"
-#include <asm-generic/socket.h>
-#include <sys/socket.h>
+#include <iostream>
+#include <sys/poll.h>
 
 Server::Server(int port, std::string password)
-    : _port(port), _password(password) {}
+    : _port(port), _password(password), _fdsize(5) {}
 
 Server::~Server() {}
 
 void Server::start() {
-  struct addrinfo *servinfo = getAddressInfo();
-  _serverSocketFd = createAndBindTheSocket(servinfo);
-
-  if (listen(_serverSocketFd, BACKLOG) != 0) {
-    std::cerr << "server: listen" << std::endl;
+  // Set up and get a listening socket
+  if ((_listener = getListenerSocket()) == -1) {
+    std::cerr << "error gettings listening socket" << std::endl;
     exit(1);
   }
 
-  struct sockaddr_storage their_addr; // connector's address info
-  socklen_t addr_size;
-  int new_fd;
+  // Set the listening socket to non-blocking (crucial before poll())
+  fcntl(_listener, F_SETFL, O_NONBLOCK);
+  // Add the listening socket to the waiting room
+  _pfds.push_back(makePollFds(_listener, POLLIN));
 
-  _pfds[0].fd = _serverSocketFd;
-  _pfds[0].events =
+  std::cout << "🚀 Server listening on port " << _port << "..." << std::endl;
 
-      addr_size = sizeof(their_addr);
-  new_fd = accept(_serverSocketFd, (struct sockaddr *)&their_addr, &addr_size);
-  if (new_fd == -1)
-    std::cerr << "Error: accept failed: " << std::strerror(errno) << std::endl;
+  // Main loop
+  for (;;) {
+    int poll_count;
+    if ((poll_count = poll(_pfds.data(), _pfds.size(), -1)) == -1) {
+      std::cerr << "poll failed" << std::endl;
+    }
 
-  std::cout << "✅ A client successfully connected! (FD: " << new_fd << ")"
-            << std::endl;
-  close(new_fd);
+    // process_connections(); // TODO:
+  }
+
+  //   struct sockaddr_storage their_addr; // connector's address info
+  //   socklen_t addr_size;
+  //   int new_fd;
+
+  //   addr_size = sizeof(their_addr);
+  //   new_fd = accept(_listener, (struct sockaddr *)&their_addr, &addr_size);
+  //   if (new_fd == -1)
+  //     std::cerr << "Error: accept failed: " << std::strerror(errno) <<
+  //     std::endl;
+
+  //   std::cout << "✅ A client successfully connected! (FD: " << new_fd << ")"
+  //             << std::endl;
+  //   close(new_fd);
 
   // sendAndReceiveData();
   // disconnectTheSocket();
@@ -54,10 +67,11 @@ struct addrinfo *Server::getAddressInfo() {
   return res;
 }
 
-int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
+int Server::getListenerSocket() {
   struct addrinfo *p;
   int fd;
   int yes = 1;
+  struct addrinfo *servinfo = getAddressInfo();
 
   for (p = servinfo; p != NULL; p = p->ai_next) {
     if ((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
@@ -83,6 +97,11 @@ int Server::createAndBindTheSocket(struct addrinfo *servinfo) {
 
   if (p == NULL) {
     std::cerr << "server: failed to bind" << std::endl;
+    exit(1);
+  }
+
+  if (listen(_listener, BACKLOG) != 0) { // start listening
+    std::cerr << "server: listen" << std::endl;
     exit(1);
   }
 
