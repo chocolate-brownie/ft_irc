@@ -30,18 +30,18 @@ std::string intToString(int i)
     return ss.str();
 }
 
-void Server::reply(int id, User* user, std::string arg1, std::string arg2)
+void Server::reply(int id, User& user, std::string arg1, std::string arg2)
 {
     // Build the Prefix: :ServerName <Code> <ClientNick> : <arg> /r/n
     // :BBCServer 404 Mike : blablabla\r\n
     //  Note: If user is not registered (Nick is empty), standard uses "*"
-    std::string user_nick =
-        ((!user || user->getNick().empty()) ? "*" : user->getNick());
-    std::string msg = ":BBCServer " + intToString(id) + " " + user_nick + " ";
+    std::string user_nick = ((user.getNick().empty()) ? "*" : user.getNick());
+    std::string msg =
+        ":ft_irc.42.fr " + intToString(id) + " " + user_nick + " ";
     switch (id)
     {
         case RPL_WELCOME:
-            msg += " :Welcome to our ft_irc " + user->getPrefix() + "\r\n";
+            msg += " :Welcome to our ft_irc " + user.getPrefix() + "\r\n";
             break;
         case RPL_NOTOPIC:
             msg += arg1 + " :No topic is set\r\n";
@@ -91,6 +91,9 @@ void Server::reply(int id, User* user, std::string arg1, std::string arg2)
         case ERR_NEEDMOREPARAMS:
             msg += arg1 + " :Not enough parameters\r\n";
             break;
+        case ERR_ALREADYREGISTRED:
+            msg += " :You're already registered\r\n";
+            break;
         case ERR_CHANNELISFULL:
             msg += arg1 + " :Channel is full (+l)\r\n";
             break;
@@ -111,7 +114,7 @@ void Server::reply(int id, User* user, std::string arg1, std::string arg2)
             msg += " :Unknown error\r\n";
             break;
     }
-    send(user->getFd(), msg.c_str(), msg.length(), 0);
+    send(user.getFd(), msg.c_str(), msg.length(), 0);
 }
 
 void Server::cmdKick(User& user, const ParsedCommand& cmd)
@@ -120,21 +123,21 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd)
     User* target;
     std::string reply;
 
-    // Checks if user is operator, if channel exists and if the target user is
+    // Checks if channel exists, if user is operator and if the target user is
     // in the channel
-    if (!user.isOperator())
-    {
-        this->reply(ERR_CHANOPRIVSNEEDED, &user, user.getNick(), "");
-        return;
-    }
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHCHANNEL, &user, cmd.args[0], "");
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+        return;
+    }
+    if (!channel->isOperator(user))
+    {
+        this->reply(ERR_CHANOPRIVSNEEDED, user, user.getNick(), "");
         return;
     }
     if (!(target = channel->isUserConnected(cmd.args[1])))
     {
-        this->reply(ERR_USERNOTINCHANNEL, &user,
+        this->reply(ERR_USERNOTINCHANNEL, user,
                     cmd.args[1] + " " + channel->getName(), "");
         return;
     }
@@ -160,22 +163,22 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd)
     // we send the error otherwise we invite the target
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHCHANNEL, &user, cmd.args[0], "");
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
     if ((target = channel->isUserConnected(cmd.args[1])))
     {
-        this->reply(ERR_USERONCHANNEL, &user, cmd.args[1], "");
+        this->reply(ERR_USERONCHANNEL, user, cmd.args[1], "");
         return;
     }
     if (!(channel->isUserConnected(user.getNick())))
     {
-        this->reply(ERR_NOTONCHANNEL, &user, channel->getName(), "");
+        this->reply(ERR_NOTONCHANNEL, user, channel->getName(), "");
         return;
     }
-    if (!channel->getInviteMode() && !(user.isOperator()))
+    if (!channel->getInviteMode() && !(channel->isOperator(user)))
     {
-        this->reply(ERR_CHANOPRIVSNEEDED, &user, channel->getName(), "");
+        this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
         return;
     }
     // We send the invite
@@ -184,7 +187,7 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd)
              channel->getName() + "\r\n";
     send((*target).getFd(), invite.c_str(), invite.length(), 0);
     // We send confimation to the user
-    this->reply(RPL_INVITING, &user, target->getNick(), channel->getName());
+    this->reply(RPL_INVITING, user, target->getNick(), channel->getName());
 }
 
 void Server::cmdTopic(User& user, const ParsedCommand& cmd)
@@ -193,23 +196,23 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd)
     std::string reply;
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHCHANNEL, &user, cmd.args[0], "");
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
     if (cmd.args.size() == 1)
     {
         if (channel->getTopic().empty())
-            this->reply(RPL_NOTOPIC, &user, channel->getName(), "");
+            this->reply(RPL_NOTOPIC, user, channel->getName(), "");
         else
-            this->reply(RPL_TOPIC, &user, channel->getName(),
+            this->reply(RPL_TOPIC, user, channel->getName(),
                         channel->getTopic());
         return;
     } // IF IRINA CHECKS ALREADY I CAN TAKE OUT THE ELSE IF
     else if (cmd.args.size() == 2)
     {
-        if (channel->getTopicMode() && !user.isOperator())
+        if (channel->getTopicMode() && !channel->isOperator(user))
         {
-            this->reply(ERR_CHANOPRIVSNEEDED, &user, channel->getName(), "");
+            this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
             return;
         }
         channel->setTopic(cmd.args[1]);
@@ -232,7 +235,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     // just ignore him)
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHCHANNEL, &user, cmd.args[0], "");
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
     if (channel->isUserConnected(user))
@@ -242,7 +245,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     {
         if (!channel->isInvited(user))
         {
-            this->reply(ERR_INVITEONLYCHAN, &user, channel->getName(), "");
+            this->reply(ERR_INVITEONLYCHAN, user, channel->getName(), "");
             return;
         }
         channel->removeInvited(user);
@@ -251,7 +254,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     else if (channel->getKeyMode() &&
              provided_key.compare(channel->getKey()) != 0)
     {
-        this->reply(ERR_BADCHANNELKEY, &user, channel->getName(), "");
+        this->reply(ERR_BADCHANNELKEY, user, channel->getName(), "");
         return;
     }
     // To join we add the user to the channel list and viceversa and we inform
@@ -263,10 +266,9 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     // We also send the channel topic and list of users in the channel to the
     // user
     if (!channel->getTopic().empty())
-        this->reply(RPL_TOPIC, &user, channel->getName(), channel->getTopic());
-    this->reply(RPL_NAMREPLY, &user, channel->getName(),
-                channel->getUserList());
-    this->reply(RPL_ENDOFNAMES, &user, channel->getName(), "");
+        this->reply(RPL_TOPIC, user, channel->getName(), channel->getTopic());
+    this->reply(RPL_NAMREPLY, user, channel->getName(), channel->getUserList());
+    this->reply(RPL_ENDOFNAMES, user, channel->getName(), "");
 }
 
 void Server::cmdPrivmsg(User& user, ParsedCommand& cmd)
@@ -281,12 +283,12 @@ void Server::cmdPrivmsg(User& user, ParsedCommand& cmd)
         Channel* channel;
         if (!(channel = this->getChannel(cmd.args[0])))
         {
-            this->reply(ERR_NOSUCHCHANNEL, &user, cmd.args[0], "");
+            this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
             return;
         }
         if (!channel->isUserConnected(user))
         {
-            this->reply(ERR_CANNOTSENDTOCHAN, &user, channel->getName(), "");
+            this->reply(ERR_CANNOTSENDTOCHAN, user, channel->getName(), "");
             return;
         }
         msg = ":" + user.getPrefix() + " PRIVMSG #" + channel->getName() +
@@ -297,7 +299,7 @@ void Server::cmdPrivmsg(User& user, ParsedCommand& cmd)
     User* target;
     if (!(target = this->getUser(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHNICK, &user, cmd.args[0], "");
+        this->reply(ERR_NOSUCHNICK, user, cmd.args[0], "");
         return;
     }
     msg = ":" + user.getPrefix() + " PRIVMSG " + target->getNick() + " :" +
@@ -306,6 +308,61 @@ void Server::cmdPrivmsg(User& user, ParsedCommand& cmd)
     send(target->getFd(), msg.c_str(), msg.size(), 0);
 }
 
-void Server::cmdNick(User& user, const ParsedCommand& cmd);
-void Server::cmdUser(User& user, const ParsedCommand& cmd);
-void Server::cmdPart(User& user, const ParsedCommand& cmd);
+void Server::cmdNick(User& user, const ParsedCommand& cmd)
+{
+    // We check if the new nickname is already in use
+    if (this->getUser(cmd.args[0]))
+    {
+        this->reply(ERR_NICKNAMEINUSE, user, cmd.args[0], "");
+        return;
+    }
+
+    std::string reply =
+        ":" + user.getPrefix() + " NICK :" + cmd.args[0] + "\r\n";
+    user.setNick(cmd.args[0]);
+
+    if (!user.isRegistered())
+    {
+        if (!user.getUsername().empty())
+        {
+            user.setRegistered(true);
+            this->reply(RPL_WELCOME, user, "", "");
+        }
+        return;
+    }
+
+    send(user.getFd(), reply.c_str(), reply.length(), 0);
+    std::vector<Channel*> user_channels = user.getChannels();
+    for (size_t i = 0; i < user_channels.size(); i++)
+        user_channels[i]->broadcast(user, reply);
+}
+
+void Server::cmdUser(User& user, const ParsedCommand& cmd)
+{
+    if (user.isRegistered())
+    {
+        this->reply(ERR_ALREADYREGISTRED, user, "", "");
+        return;
+    }
+
+    // USER <username> <hostname> <servername> <realname>
+    // we ignore hostname since anyone could lie about it and we already can see
+    // the ip from accept() and we ignore servername because we know our name
+    user.setUsername(cmd.args[0]);
+    user.setRealname(cmd.args[3]);
+
+    if (!user.getNick().empty() && !user.getUsername().empty())
+    {
+        user.setRegistered(true);
+        this->reply(RPL_WELCOME, user, "", "");
+    }
+}
+
+void Server::cmdPart(User& user, const ParsedCommand& cmd)
+{
+    Channel* channel;
+    if (!(channel = this->getChannel(cmd.args[0])))
+    {
+		
+    }
+}

@@ -24,11 +24,10 @@ private:
     int _userSocketFd;
     std::string _nick;     // From NICK command
     std::string _username; // From USER command (1st arg)
-    std::string _hostname; // From USER command (2nd arg) or IP
-    std::string _realname; // From USER command (Last arg, after :)
+    std::string _hostname; // IP from accept()
+    std::string _realname; // From USER command (Last arg)
     std::vector<Channel*> _channels;
 
-    bool _isOperator;
     bool _isRegistered;
 
 public:
@@ -40,6 +39,7 @@ public:
     // CHANNELS RELATED
     void addChannel(Channel& channel);
     void removeChannel(Channel& channel);
+    std::vector<Channel*> getChannels();
 
     // GETTERS
     int getFd() const;
@@ -48,11 +48,9 @@ public:
     std::string getHostname() const;
     std::string getRealname() const;
     std::string getPrefix() const;
-    bool isOperator() const;
     bool isRegistered() const;
 
     // SETTERS
-    void setOperator(bool val);
     void setRegistered(bool val);
     void setNick(const std::string& nick);
     void setUsername(const std::string& username);

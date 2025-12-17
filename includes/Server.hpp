@@ -37,6 +37,7 @@
 #define ERR_USERONCHANNEL 443
 #define ERR_NOTREGISTERED 451
 #define ERR_NEEDMOREPARAMS 461
+#define ERR_ALREADYREGISTRED 462
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
 #define ERR_INVITEONLYCHAN 473
@@ -68,7 +69,7 @@ private:
     typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
     std::map<std::string, CommandFunction> _commandMap;
 
-    void reply(int id, User* user, std::string arg1, std::string arg2);
+    void reply(int id, User& user, std::string arg1, std::string arg2);
 
 public:
     Server(int port, std::string password);

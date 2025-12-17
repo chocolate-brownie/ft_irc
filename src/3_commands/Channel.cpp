@@ -90,10 +90,11 @@ std::string Channel::getUserList() const
     for (std::vector<User*>::const_iterator it = _users.begin();
          it != _users.end(); it++)
     {
-		if ((*it)->isOperator())
+		if (this->isOperator(**it))
 			list += "@";
-        list += (*it)->getNick();
+        list += (*it)->getNick() + " ";
     }
+	return (list);
 }
 
 // OPERATORS

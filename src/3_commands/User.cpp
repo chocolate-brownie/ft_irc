@@ -1,8 +1,9 @@
 #include "../../includes/User.hpp"
 
+// FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
+// BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
 User::User(int fd)
-    : _userSocketFd(fd), _isOperator(false), _isRegistered(false),
-      _hostname("localhost")
+    : _userSocketFd(fd), _isRegistered(false), _hostname("localhost")
 {
 }
 
@@ -34,6 +35,11 @@ void User::removeChannel(Channel& channel)
             return;
         }
     }
+}
+
+std::vector<Channel*> User::getChannels()
+{
+    return (_channels);
 }
 
 // GETTERS & SETTERS
@@ -68,19 +74,9 @@ std::string User::getPrefix() const
     return (_nick + "!" + _username + "@" + _hostname);
 }
 
-bool User::isOperator() const
-{
-    return (_isOperator);
-}
-
 bool User::isRegistered() const
 {
     return (_isRegistered);
-}
-
-void User::setOperator(bool val)
-{
-    _isOperator = val;
 }
 
 void User::setRegistered(bool val)
