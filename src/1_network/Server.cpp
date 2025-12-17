@@ -8,7 +8,7 @@ Server::Server(int port, std::string password)
     _commandMap["TOPIC"] = &Server::cmdTopic;
     _commandMap["MODE"] = &Server::cmdMode;
     _commandMap["JOIN"] = &Server::cmdJoin;
-    _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
+    // _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
     _commandMap["NICK"] = &Server::cmdNick;
     _commandMap["USER"] = &Server::cmdUser;
     _commandMap["PART"] = &Server::cmdPart;
