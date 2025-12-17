@@ -1,9 +1,10 @@
 #include "../../includes/User.hpp"
+#include "../../includes/Channel.hpp"
 
 // FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
 // BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
 User::User(int fd)
-    : _userSocketFd(fd), _isRegistered(false), _hostname("localhost")
+    : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false)
 {
 }
 

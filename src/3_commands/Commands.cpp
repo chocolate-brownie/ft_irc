@@ -144,8 +144,8 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd)
     // When kicking user we remove him from the channel list and vice versa we
     // remove the channel from his list, and broadcast the message to inform the
     // channel
-    std::string reply = user.getPrefix() + " KICK " + channel->getName() + " " +
-                        target->getNick() + " : Kicked by operator\r\n";
+    reply = user.getPrefix() + " KICK " + channel->getName() + " " +
+            target->getNick() + " : Kicked by operator\r\n";
     channel->broadcast(reply);
     channel->removeUser(*target);
     target->removeChannel(*channel);
@@ -223,7 +223,10 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd)
     }
 }
 
-void Server::cmdMode(User& user, const ParsedCommand& cmd) {}
+void Server::cmdMode(User& user, const ParsedCommand& cmd) 
+{
+	(void) user, (void) cmd;
+}
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd)
 {
@@ -271,19 +274,20 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     this->reply(RPL_ENDOFNAMES, user, channel->getName(), "");
 }
 
-void Server::cmdPrivmsg(User& user, ParsedCommand& cmd)
+void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd)
 {
     std::string msg;
 
     // Distinguish between #channel and user
     if (cmd.args[0][0] == '#')
     {
-        cmd.args[0].erase(0, 1); // remove the # (I CONSIDER THAT INSIDE OF
-                                 // CHANNEL->_NAME WE STORE THE NAME WITHOUT #)
+		std::string channel_name = cmd.args[0];
+		channel_name.erase(0, 1);
+        
         Channel* channel;
-        if (!(channel = this->getChannel(cmd.args[0])))
+        if (!(channel = this->getChannel(channel_name)))
         {
-            this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+            this->reply(ERR_NOSUCHCHANNEL, user, channel_name, "");
             return;
         }
         if (!channel->isUserConnected(user))
@@ -361,8 +365,10 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd)
 void Server::cmdPart(User& user, const ParsedCommand& cmd)
 {
     Channel* channel;
+
+	(void) user;
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-		
+
     }
 }

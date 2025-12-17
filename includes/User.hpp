@@ -16,7 +16,8 @@
 #include <unistd.h>
 #include <vector> // IWYU pragma: keep
 
-#include "Server.hpp"
+class Server;
+class Channel;
 
 class User
 {

@@ -84,7 +84,7 @@ public:
     void cmdTopic(User& user, const ParsedCommand& cmd);
     void cmdMode(User& user, const ParsedCommand& cmd);
     void cmdJoin(User& user, const ParsedCommand& cmd);
-    void cmdPrivmsg(User& user, ParsedCommand& cmd);
+    void cmdPrivmsg(User& user, const ParsedCommand& cmd);
     void cmdNick(User& user, const ParsedCommand& cmd);
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);

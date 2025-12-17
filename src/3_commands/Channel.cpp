@@ -1,4 +1,5 @@
 #include "../../includes/Channel.hpp"
+#include "../../includes/User.hpp"
 #include <vector>
 
 Channel::Channel(std::string name) : _name(name), _userlimit(0)
@@ -14,7 +15,7 @@ Channel::~Channel() {}
 // COMMUNICATION
 
 // Sends a message to all users in the channel
-int Channel::broadcast(User& source, std::string msg)
+int Channel::broadcast(std::string msg)
 {
     if (msg == "")
         return (-1);
@@ -90,11 +91,11 @@ std::string Channel::getUserList() const
     for (std::vector<User*>::const_iterator it = _users.begin();
          it != _users.end(); it++)
     {
-		if (this->isOperator(**it))
-			list += "@";
+        if (this->isOperator(**it))
+            list += "@";
         list += (*it)->getNick() + " ";
     }
-	return (list);
+    return (list);
 }
 
 // OPERATORS
@@ -197,4 +198,24 @@ int Channel::getLimit() const
 void Channel::setLimit(int limit)
 {
     _userlimit = limit;
+}
+
+bool Channel::getKeyMode() const
+{
+    return (_key_mode);
+}
+
+bool Channel::getInviteMode() const
+{
+    return (_invite_mode);
+}
+
+bool Channel::getTopicMode() const
+{
+    return (_topic_mode);
+}
+
+bool Channel::getLimitMode() const
+{
+    return (_limit_mode);
 }

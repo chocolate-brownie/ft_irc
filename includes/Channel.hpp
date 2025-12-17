@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <vector> // IWYU pragma: keep
 
-#include "User.hpp"
+class User;
 
 class Channel
 {
@@ -25,8 +25,8 @@ private:
     std::string _topic;
     std::string _key;
     std::vector<User*> _users;
-	std::vector<User*> _operators;
-	std::vector<User*> _invited;
+    std::vector<User*> _operators;
+    std::vector<User*> _invited;
     int _userlimit;
 
     bool _key_mode;
@@ -41,28 +41,28 @@ public:
     Channel(std::string name);
     ~Channel();
 
-	// COMMUNICATION
+    // COMMUNICATION
     int broadcast(std::string msg);
     int broadcast(User& source, std::string msg);
 
-	// USERS
+    // USERS
     User* isUserConnected(User& user) const;
     User* isUserConnected(const std::string& nick) const;
-	void addUser(User& user);
+    void addUser(User& user);
     void removeUser(User& user);
-	std::string	getUserList() const;
+    std::string getUserList() const;
 
-	// OPERATORS
+    // OPERATORS
     void addOperator(User& client);
     void removeOperator(User& client);
     bool isOperator(User& client) const;
 
-	// INVITES
-	void addInvited(User& client);
+    // INVITES
+    void addInvited(User& client);
     void removeInvited(User& client);
     bool isInvited(User& client) const;
 
-	// GETTERS
+    // GETTERS
     std::string getName() const;
     std::string getKey() const;
     std::string getTopic() const;
@@ -72,7 +72,7 @@ public:
     bool getTopicMode() const;
     bool getLimitMode() const;
 
-	// SETTERS
+    // SETTERS
     void setName(std::string name);
     void setKey(std::string key);
     void setTopic(std::string topic);
