@@ -27,14 +27,22 @@ private:
 
   const std::size_t _fdsize;        // max size of the room
   std::vector<struct pollfd> _pfds; // room for the connections
-  struct pollfd makePollFds(int fd, short events) const;
 
   Server(const Server &other);
   Server &operator=(const Server &other);
 
-  std::string portToString(int port);
+  // Main methods regarding to the network-engine
   struct addrinfo *getAddressInfo();
   int getListenerSocket();
+
+  void processConnections();
+  void handleNewConnection();
+  void handleClientData();
+
+  // Util methods regarding to the network-engine
+  std::string portToString(int port);
+  struct pollfd makePollFds(int fd, short events) const;
+  std::string getClientIP(const struct sockaddr_storage &addr) const;
 
 public:
   Server(int port, std::string password);

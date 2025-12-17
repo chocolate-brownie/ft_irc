@@ -21,17 +21,14 @@ void Server::start() {
 
   // Main loop
   for (;;) {
-    int ret;
-    if ((ret = poll(_pfds.data(), _pfds.size(), -1)) == -1) {
-      std::cerr << "poll failed" << std::endl;
+    int num_events = poll(_pfds.data(), _pfds.size(), -1);
+    if (num_events == -1) {
+      std::cerr << "poll" << std::endl;
+      exit(1);
     }
 
-    // process_connections(); // TODO:
+    processConnections();
   }
-
-  //   struct sockaddr_storage their_addr; // connector's address info
-  //   socklen_t addr_size;
-  //   int new_fd;
 
   //   addr_size = sizeof(their_addr);
   //   new_fd = accept(_listener, (struct sockaddr *)&their_addr, &addr_size);
@@ -39,8 +36,6 @@ void Server::start() {
   //     std::cerr << "Error: accept failed: " << std::strerror(errno) <<
   //     std::endl;
 
-  //   std::cout << "✅ A client successfully connected! (FD: " << new_fd << ")"
-  //             << std::endl;
   //   close(new_fd);
 
   // sendAndReceiveData();
@@ -98,7 +93,7 @@ int Server::getListenerSocket() {
     exit(1);
   }
 
-  if (listen(_listener, BACKLOG) == -1) { // start listening
+  if (listen(fd, BACKLOG) == -1) { // start listening
     std::cerr << "server: listen" << std::endl;
     exit(1);
   }
