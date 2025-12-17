@@ -38,6 +38,7 @@ private:
   void processConnections();
   void handleNewConnection();
   void handleClientData();
+  void addToTheRoom(int fd);
 
   // Util methods regarding to the network-engine
   std::string portToString(int port);

@@ -11,9 +11,9 @@ void Server::handleNewConnection() {
       -1)
     std::cerr << "accpet" << std::endl;
   else {
-    // addToTheRoom(newfd); // TODO:
     std::cout << "✅ New connection from " << getClientIP(remoteaddr)
               << " on socket " << newfd << std::endl;
+    addToTheRoom(newfd);
   }
 }
 
