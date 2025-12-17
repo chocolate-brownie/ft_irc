@@ -14,11 +14,11 @@
 #define PRIVMSG 6
 #define NICK 7
 #define USER 8
+#define PART 9
 
 struct ParsedCommand {
 	std::string command;              // e.g., "JOIN"
 	std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
-	int cmd_code;
 };
 
 class Parser {
@@ -28,8 +28,8 @@ class Parser {
 		Parser& operator=(const Parser& other);
 		~Parser();
 
+		static ParsedCommand split(const std::string& input);
 	public:
 		// The Input is a raw string. The Output is a structured object.
 		static ParsedCommand parse(const std::string& input);
-		static ParsedCommand split(const std::string& input);
 };

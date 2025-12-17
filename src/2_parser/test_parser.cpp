@@ -3,17 +3,31 @@
 int main() {
 	// 1. Create a list of "Fake" network messages
 	std::string test_cases[] = {
-		"NICK Alice",               // Simple command
-		"USER alice 0 * :Alice Wonderland", // Complex trailing argument
-		"JOIN #42",                  // Standard command
-		"PRIVMSG #help :Hello, I need help", // Message with spaces
-		"PRIVMSG Bob :Can you review my code?",
-		":prefix COMMAND arg1",      // Command with prefix (advanced) should give error
-		"PART #channel :Goodbye",
-		"PING :12345678",
-		"MODE #channel +o Alice",
+		// valid
 		"TOPIC #help :We help with C++ IRC projects",
-		""                           // Empty string
+		"TOPIC #strangers",
+		"PRIVMSG #help :Hello, I need help",
+		"PRIVMSG Bob :Can you review my code?",
+		"KICK #42 Enrico :for being too pretty",
+		"KICK #help smartass",
+		"INVITE little_rat #trap",
+		"JOIN #family",
+		"JOIN #project 123456",
+		"NICK PrettyCat2001",
+		"MODE #channel +i",
+		"MODE #channel -t",
+		"MODE #channel +o Alice",
+		"MODE #channel +k secret123",
+		"MODE #channel +l 12",
+		"USER guest tolmoon tolsun :Ronnie Reagan",
+		"PART #channel :Goodbye",
+
+		"PART #channel :Goodbye",
+
+		// invalid
+		":prefix COMMAND arg1",
+		"PING :12345678",
+		""
 	};
 
 	// 2. Loop through them and test the Parser
