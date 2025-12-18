@@ -223,9 +223,9 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd)
     }
 }
 
-void Server::cmdMode(User& user, const ParsedCommand& cmd) 
+void Server::cmdMode(User& user, const ParsedCommand& cmd)
 {
-	(void) user, (void) cmd;
+    (void)user, (void)cmd;
 }
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd)
@@ -281,9 +281,9 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd)
     // Distinguish between #channel and user
     if (cmd.args[0][0] == '#')
     {
-		std::string channel_name = cmd.args[0];
-		channel_name.erase(0, 1);
-        
+        std::string channel_name = cmd.args[0];
+        channel_name.erase(0, 1);
+
         Channel* channel;
         if (!(channel = this->getChannel(channel_name)))
         {
@@ -366,9 +366,10 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd)
 {
     Channel* channel;
 
-	(void) user;
+    (void)user;
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-
+		this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+		return;
     }
 }
