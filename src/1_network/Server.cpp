@@ -2,14 +2,14 @@
 #include <cerrno>
 
 Server::Server(int port, std::string password)
-    : _port(port), _password(password)
+    : _port(port), _password(password), _fdsize(5)
 {
     _commandMap["KICK"] = &Server::cmdKick;
     _commandMap["INVITE"] = &Server::cmdInvite;
     _commandMap["TOPIC"] = &Server::cmdTopic;
     _commandMap["MODE"] = &Server::cmdMode;
     _commandMap["JOIN"] = &Server::cmdJoin;
-    // _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
+    _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
     _commandMap["NICK"] = &Server::cmdNick;
     _commandMap["USER"] = &Server::cmdUser;
     _commandMap["PART"] = &Server::cmdPart;
@@ -17,15 +17,6 @@ Server::Server(int port, std::string password)
 
 Server::~Server() {}
 
-/* Check available address results (IPv4 or IPv6) and attempt to create
- * and bind a socket to the first valid one. Loop through the results to handle
- * both IPv4 and IPv6. While mandatory is IPv4-only, this approach provides
- * protocol-agnostic robustness correctly */
-struct addrinfo* Server::getAddressInfo()
-{
-    struct addrinfo hints, *res;
-    int status;
-}
 void Server::start()
 {
     // Set up and get a listening socket
@@ -71,7 +62,7 @@ struct addrinfo* Server::getAddressInfo()
 {
     struct addrinfo hints, *res;
     int status;
-	
+
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -87,39 +78,6 @@ struct addrinfo* Server::getAddressInfo()
     return res;
 }
 
-// int Server::createAndBindTheSocket(struct addrinfo* servinfo)
-// {
-//     struct addrinfo* p;
-//     int fd;
-//     for (p = servinfo; p != NULL; p = p->ai_next)
-//     {
-//         fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-//         if (fd == -1)
-//         {
-//             std::cerr << "Error: Socket creation failed, trying next..."
-//                       << std::endl;
-//             continue;
-//         }
-
-//         if (bind(fd, p->ai_addr, p->ai_addrlen) == -1)
-//         {
-//             std::cerr << "Error: Binding failed for the current socket"
-//                       << std::endl;
-//             close(fd);
-//             continue;
-//         }
-
-//         break; // Success!
-//     }
-
-//     if (p == NULL)
-//     {
-//         std::cerr << "Error: Failed to bind anything" << std::endl;
-//         exit(1);
-//     }
-
-//     return fd;
-//	   }
 int Server::getListenerSocket()
 {
     struct addrinfo* p;
@@ -167,4 +125,4 @@ int Server::getListenerSocket()
     }
 
     return fd;
-
+}
