@@ -21,6 +21,17 @@ struct ParsedCommand {
 	std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
 };
 
+void IsValidCmd(ParsedCommand *pc, int *cmd_code);
+void IsValid_TOPIC(ParsedCommand *pc);
+void IsValid_PRIVMSG(ParsedCommand *pc);
+void IsValid_KICK(ParsedCommand *pc);
+void IsValid_INVITE(ParsedCommand *pc);
+void IsValid_JOIN(ParsedCommand *pc);
+void IsValid_NICK(ParsedCommand *pc);
+void IsValid_MODE(ParsedCommand *pc);
+void IsValid_USER(ParsedCommand *pc);
+void IsValid_PART(ParsedCommand *pc);
+
 class Parser {
 	private:
 		Parser();
