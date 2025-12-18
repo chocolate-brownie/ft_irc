@@ -13,21 +13,39 @@ int main() {
 		"INVITE little_rat #trap",
 		"JOIN #family",
 		"JOIN #project 123456",
-		"NICK PrettyCat2001",
+		"NICK irkalini",
 		"MODE #channel +i",
 		"MODE #channel -t",
 		"MODE #channel +o Alice",
 		"MODE #channel +k secret123",
 		"MODE #channel +l 12",
 		"USER guest tolmoon tolsun :Ronnie Reagan",
-		"PART #channel :Goodbye",
-
-		"PART #channel :Goodbye",
-
+		"PART #channel",
 		// invalid
 		":prefix COMMAND arg1",
 		"PING :12345678",
-		""
+		"",
+		"TOPIC",
+		"TOPIC user",
+		"PRIVMSG",
+		"PRIVMSG bob :\tg",
+		"KICK #block",
+		"KICK 42 cat",
+		"INVITE everybody",
+		"INVITE irkalini 42",
+		"JOIN",
+		"JOIN 42",
+		"NICK !onely",
+		"NICK VerySmartDog",
+		"MODE #42 l 10",
+		"MODE #42 +f",
+		"MODE #42 +t Clara",
+		"MODE #42 -l 10",
+		"MODE #42 +k",
+		"MODE #42 o",
+		"USER user! host serv :Real name",
+		"USER user host serv",
+		"PART 42"
 	};
 
 	// 2. Loop through them and test the Parser
