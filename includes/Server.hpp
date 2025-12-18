@@ -105,6 +105,8 @@ public:
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
 
+	void	addChannel(Channel* channel);
+	void	rmvChannel(Channel* channel);
     Channel* getChannel(const std::string& name);
     User* getUser(const std::string& name);
 };

@@ -1,5 +1,23 @@
 #include "../../includes/Server.hpp"
 
+void Server::addChannel(Channel* channel)
+{
+    _channels.push_back(channel);
+}
+
+void Server::rmvChannel(Channel* channel)
+{
+    for (std::vector<Channel*>::iterator it = _channels.begin();
+         it != _channels.end(); it++)
+    {
+		if ((*it) == channel)
+		{
+			_channels.erase(it);
+			return;
+		}
+    }
+}
+
 // Returns a Channel from the vector given its name
 Channel* Server::getChannel(const std::string& name)
 {
@@ -238,10 +256,12 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     // just ignore him)
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
-        return;
+        channel = new Channel(cmd.args[0]);
+        this->addChannel(channel);
+		channel->addUser(user);
+		channel->addOperator(user);
     }
-    if (channel->isUserConnected(user))
+    else if (channel->isUserConnected(user))
         return;
     // When invite mode is active, if user is invited he can join else no
     if (channel->getInviteMode())
@@ -366,10 +386,28 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd)
 {
     Channel* channel;
 
-    (void)user;
+    // We check if channel exist and if user is connected
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-		this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
-		return;
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+        return;
+    }
+    if (!channel->isUserConnected(user))
+    {
+        this->reply(ERR_NOTONCHANNEL, user, cmd.args[0], "");
+        return;
+    }
+    std::string reason = (cmd.args.size() > 1) ? cmd.args[1] : "Leaving";
+    std::string reply = ":" + user.getPrefix() + " PART " + cmd.args[0] + " :" +
+                        reason + "\r\n";
+    channel->broadcast(reply);
+
+    channel->removeUser(user);
+    user.removeChannel(*channel);
+
+    std::string list = channel->getUserList();
+    if (list.empty())
+    {
+        this->r
     }
 }
