@@ -200,6 +200,26 @@ void Channel::setLimit(int limit)
     _userlimit = limit;
 }
 
+void Channel::setKeyMode(bool mode)
+{
+    _key_mode = mode;
+}
+
+void Channel::setLimitMode(bool mode)
+{
+    _limit_mode = mode;
+}
+
+void Channel::setTopicMode(bool mode)
+{
+    _topic_mode = mode;
+}
+
+void Channel::setInviteMode(bool mode)
+{
+    _invite_mode = mode;
+}
+
 bool Channel::getKeyMode() const
 {
     return (_key_mode);
