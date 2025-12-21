@@ -75,7 +75,7 @@ private:
 
     void processConnections();
     void handleNewConnection();
-    void handleClientData();
+    bool handleClientData(int client_fd);
     void addToTheRoom(int fd);
     void removeFromTheRoom(int fd);
 

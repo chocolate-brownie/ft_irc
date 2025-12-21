@@ -1,5 +1,6 @@
 #include "../../includes/Parser.hpp"
 
+/*
 int main()
 {
     // 1. Create a list of "Fake" network messages
@@ -72,3 +73,4 @@ int main()
 
     return 0;
 }
+*/
