@@ -369,7 +369,7 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd)
     (void)user;
     if (!(channel = this->getChannel(cmd.args[0])))
     {
-		this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
-		return;
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+        return;
     }
 }

@@ -1,5 +1,4 @@
 #include "../../includes/Server.hpp"
-#include <cerrno>
 
 Server::Server(int port, std::string password)
     : _port(port), _password(password), _fdsize(5)

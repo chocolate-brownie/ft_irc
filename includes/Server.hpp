@@ -65,9 +65,6 @@ private:
     Server(const Server& other);
     Server& operator=(const Server& other);
 
-    // struct addrinfo* getAddressInfo();
-    // int createAndBindTheSocket(struct addrinfo* servinfo);
-
     // Type definition for a pointer to a member function of the Server class
     typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
     std::map<std::string, CommandFunction> _commandMap;
