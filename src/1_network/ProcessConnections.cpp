@@ -1,7 +1,5 @@
 #include "../../includes/Server.hpp"
 
-#include <arpa/inet.h>
-
 void Server::handleNewConnection()
 {
     struct sockaddr_storage remoteaddr; // connector's address info
@@ -29,8 +27,7 @@ void Server::processConnections()
         if(_pfds[i].revents & (POLLIN | POLLHUP))
         {
             if(_pfds[i].fd == _listener) // Check if we are the listener
-                handleNewConnection();   // If we are its a new connection. Handle
-                                         // it!!
+                handleNewConnection();   // If we are its a new connection. Handle it
             else
                 handleClientData(); // Otherwise we're just a regular client
         }

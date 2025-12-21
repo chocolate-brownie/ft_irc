@@ -77,6 +77,7 @@ private:
     void handleNewConnection();
     void handleClientData();
     void addToTheRoom(int fd);
+    void removeFromTheRoom(int fd);
 
     // Util methods regarding to the network-engine
     std::string   portToString(int port);

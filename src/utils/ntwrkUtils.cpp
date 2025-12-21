@@ -35,10 +35,7 @@ std::string Server::getClientIP(const struct sockaddr_storage& addr) const
 
     // 2. Convert binary IP to string
     // inet_ntop returns the pointer to 'ipStr' on success
-    if(inet_ntop(addr.ss_family, s, ipStr, sizeof(ipStr)) == NULL)
-    {
-        return "Unknown IP";
-    }
+    if(inet_ntop(addr.ss_family, s, ipStr, sizeof(ipStr)) == NULL) return "Unknown IP";
 
     return std::string(ipStr);
 }
