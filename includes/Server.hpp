@@ -9,6 +9,7 @@
 #include <cstring>  // IWYU pragma: keep
 #include <fcntl.h>  // IWYU pragma: keep
 #include <iostream> // IWYU pragma: keep
+#include <map>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sstream> // IWYU pragma: keep
@@ -18,8 +19,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
-
-#include <map>
 
 #define RPL_WELCOME 001
 #define RPL_NOTOPIC 331
@@ -52,15 +51,15 @@
 class Server
 {
 private:
-    int _port;
+    int         _port;
     std::string _password;
-    int _listener; // Listening socket descriptor
+    int         _listener; // Listening socket descriptor
 
-    const std::size_t _fdsize;        // max size of the room
-    std::vector<struct pollfd> _pfds; // room for the connections
+    const std::size_t          _fdsize; // max size of the room
+    std::vector<struct pollfd> _pfds;   // room for the connections
 
     std::vector<Channel*> _channels;
-    std::vector<User*> _users;
+    std::vector<User*>    _users;
 
     Server(const Server& other);
     Server& operator=(const Server& other);
@@ -72,7 +71,7 @@ private:
     void reply(int id, User& user, std::string arg1, std::string arg2);
     // Main methods regarding to the network-engine
     struct addrinfo* getAddressInfo();
-    int getListenerSocket();
+    int              getListenerSocket();
 
     void processConnections();
     void handleNewConnection();
@@ -80,9 +79,9 @@ private:
     void addToTheRoom(int fd);
 
     // Util methods regarding to the network-engine
-    std::string portToString(int port);
+    std::string   portToString(int port);
     struct pollfd makePollFds(int fd, short events) const;
-    std::string getClientIP(const struct sockaddr_storage& addr) const;
+    std::string   getClientIP(const struct sockaddr_storage& addr) const;
 
 public:
     Server(int port, std::string password);
@@ -103,7 +102,7 @@ public:
     void cmdPart(User& user, const ParsedCommand& cmd);
 
     Channel* getChannel(const std::string& name);
-    User* getUser(const std::string& name);
+    User*    getUser(const std::string& name);
 };
 
 #endif

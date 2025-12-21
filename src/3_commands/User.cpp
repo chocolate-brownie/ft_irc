@@ -1,19 +1,16 @@
 #include "../../includes/User.hpp"
+
 #include "../../includes/Channel.hpp"
 
 // FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
 // BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
-User::User(int fd)
-    : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false)
-{
-}
+User::User(int fd) : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false) {}
 
 User::~User()
 {
     close(_userSocketFd);
 
-    for (std::vector<Channel*>::iterator it = _channels.begin();
-         it != _channels.end(); it++)
+    for(std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
         (*it)->removeUser(*this);
     _channels.clear();
 }
@@ -27,10 +24,9 @@ void User::addChannel(Channel& channel)
 
 void User::removeChannel(Channel& channel)
 {
-    for (std::vector<Channel*>::iterator it = _channels.begin();
-         it != _channels.end(); it++)
+    for(std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
     {
-        if (*it == &channel)
+        if(*it == &channel)
         {
             _channels.erase(it);
             return;

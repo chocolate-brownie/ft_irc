@@ -3,22 +3,18 @@
 // Returns a Channel from the vector given its name
 Channel* Server::getChannel(const std::string& name)
 {
-    for (std::vector<Channel*>::iterator it = _channels.begin();
-         it != _channels.end(); it++)
+    for(std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
     {
-        if ((*it)->getName() == name)
-            return (*it);
+        if((*it)->getName() == name) return (*it);
     }
     return (NULL);
 }
 
 User* Server::getUser(const std::string& name)
 {
-    for (std::vector<User*>::iterator it = _users.begin(); it != _users.end();
-         it++)
+    for(std::vector<User*>::iterator it = _users.begin(); it != _users.end(); it++)
     {
-        if ((*it)->getNick() == name)
-            return (*it);
+        if((*it)->getNick() == name) return (*it);
     }
     return (NULL);
 }
@@ -36,9 +32,8 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2)
     // :BBCServer 404 Mike : blablabla\r\n
     //  Note: If user is not registered (Nick is empty), standard uses "*"
     std::string user_nick = ((user.getNick().empty()) ? "*" : user.getNick());
-    std::string msg =
-        ":ft_irc.42.fr " + intToString(id) + " " + user_nick + " ";
-    switch (id)
+    std::string msg       = ":ft_irc.42.fr " + intToString(id) + " " + user_nick + " ";
+    switch(id)
     {
         case RPL_WELCOME:
             msg += " :Welcome to our ft_irc " + user.getPrefix() + "\r\n";
@@ -119,33 +114,32 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2)
 
 void Server::cmdKick(User& user, const ParsedCommand& cmd)
 {
-    Channel* channel;
-    User* target;
+    Channel*    channel;
+    User*       target;
     std::string reply;
 
     // Checks if channel exists, if user is operator and if the target user is
     // in the channel
-    if (!(channel = this->getChannel(cmd.args[0])))
+    if(!(channel = this->getChannel(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
-    if (!channel->isOperator(user))
+    if(!channel->isOperator(user))
     {
         this->reply(ERR_CHANOPRIVSNEEDED, user, user.getNick(), "");
         return;
     }
-    if (!(target = channel->isUserConnected(cmd.args[1])))
+    if(!(target = channel->isUserConnected(cmd.args[1])))
     {
-        this->reply(ERR_USERNOTINCHANNEL, user,
-                    cmd.args[1] + " " + channel->getName(), "");
+        this->reply(ERR_USERNOTINCHANNEL, user, cmd.args[1] + " " + channel->getName(), "");
         return;
     }
     // When kicking user we remove him from the channel list and vice versa we
     // remove the channel from his list, and broadcast the message to inform the
     // channel
-    reply = user.getPrefix() + " KICK " + channel->getName() + " " +
-            target->getNick() + " : Kicked by operator\r\n";
+    reply = user.getPrefix() + " KICK " + channel->getName() + " " + target->getNick() +
+            " : Kicked by operator\r\n";
     channel->broadcast(reply);
     channel->removeUser(*target);
     target->removeChannel(*channel);
@@ -153,38 +147,38 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd)
 
 void Server::cmdInvite(User& user, const ParsedCommand& cmd)
 {
-    Channel* channel;
-    User* target;
+    Channel*    channel;
+    User*       target;
     std::string invite;
 
     // Checks if channel exists and if the target user is
     // not already in the channel, then
     // IF INVITE MODE TRUE and USER IS NOT OPERATOR
     // we send the error otherwise we invite the target
-    if (!(channel = this->getChannel(cmd.args[0])))
+    if(!(channel = this->getChannel(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
-    if ((target = channel->isUserConnected(cmd.args[1])))
+    if((target = channel->isUserConnected(cmd.args[1])))
     {
         this->reply(ERR_USERONCHANNEL, user, cmd.args[1], "");
         return;
     }
-    if (!(channel->isUserConnected(user.getNick())))
+    if(!(channel->isUserConnected(user.getNick())))
     {
         this->reply(ERR_NOTONCHANNEL, user, channel->getName(), "");
         return;
     }
-    if (!channel->getInviteMode() && !(channel->isOperator(user)))
+    if(!channel->getInviteMode() && !(channel->isOperator(user)))
     {
         this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
         return;
     }
     // We send the invite
     channel->addInvited(*target);
-    invite = ":" + user.getPrefix() + " INVITE " + target->getNick() + " :" +
-             channel->getName() + "\r\n";
+    invite = ":" + user.getPrefix() + " INVITE " + target->getNick() + " :" + channel->getName() +
+             "\r\n";
     send((*target).getFd(), invite.c_str(), invite.length(), 0);
     // We send confimation to the user
     this->reply(RPL_INVITING, user, target->getNick(), channel->getName());
@@ -192,32 +186,31 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd)
 
 void Server::cmdTopic(User& user, const ParsedCommand& cmd)
 {
-    Channel* channel;
+    Channel*    channel;
     std::string reply;
-    if (!(channel = this->getChannel(cmd.args[0])))
+    if(!(channel = this->getChannel(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
-    if (cmd.args.size() == 1)
+    if(cmd.args.size() == 1)
     {
-        if (channel->getTopic().empty())
+        if(channel->getTopic().empty())
             this->reply(RPL_NOTOPIC, user, channel->getName(), "");
         else
-            this->reply(RPL_TOPIC, user, channel->getName(),
-                        channel->getTopic());
+            this->reply(RPL_TOPIC, user, channel->getName(), channel->getTopic());
         return;
     } // IF IRINA CHECKS ALREADY I CAN TAKE OUT THE ELSE IF
-    else if (cmd.args.size() == 2)
+    else if(cmd.args.size() == 2)
     {
-        if (channel->getTopicMode() && !channel->isOperator(user))
+        if(channel->getTopicMode() && !channel->isOperator(user))
         {
             this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
             return;
         }
         channel->setTopic(cmd.args[1]);
-        reply = ":" + user.getPrefix() + " TOPIC " + channel->getName() + " :" +
-                cmd.args[1] + "\r\n";
+        reply =
+            ":" + user.getPrefix() + " TOPIC " + channel->getName() + " :" + cmd.args[1] + "\r\n";
         channel->broadcast(reply);
         return;
     }
@@ -225,28 +218,27 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd)
 
 void Server::cmdMode(User& user, const ParsedCommand& cmd)
 {
-    (void)user, (void)cmd;
+    (void) user, (void) cmd;
 }
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd)
 {
-    Channel* channel;
+    Channel*    channel;
     std::string reply;
     std::string provided_key = (cmd.args.size() > 1) ? cmd.args[1] : "";
 
     // Check if channel exists and if user is already connected (in this case we
     // just ignore him)
-    if (!(channel = this->getChannel(cmd.args[0])))
+    if(!(channel = this->getChannel(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
-    if (channel->isUserConnected(user))
-        return;
+    if(channel->isUserConnected(user)) return;
     // When invite mode is active, if user is invited he can join else no
-    if (channel->getInviteMode())
+    if(channel->getInviteMode())
     {
-        if (!channel->isInvited(user))
+        if(!channel->isInvited(user))
         {
             this->reply(ERR_INVITEONLYCHAN, user, channel->getName(), "");
             return;
@@ -254,8 +246,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
         channel->removeInvited(user);
     }
     // When key mode is active we check if the given password matches
-    else if (channel->getKeyMode() &&
-             provided_key.compare(channel->getKey()) != 0)
+    else if(channel->getKeyMode() && provided_key.compare(channel->getKey()) != 0)
     {
         this->reply(ERR_BADCHANNELKEY, user, channel->getName(), "");
         return;
@@ -268,7 +259,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd)
     channel->broadcast(reply);
     // We also send the channel topic and list of users in the channel to the
     // user
-    if (!channel->getTopic().empty())
+    if(!channel->getTopic().empty())
         this->reply(RPL_TOPIC, user, channel->getName(), channel->getTopic());
     this->reply(RPL_NAMREPLY, user, channel->getName(), channel->getUserList());
     this->reply(RPL_ENDOFNAMES, user, channel->getName(), "");
@@ -279,35 +270,34 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd)
     std::string msg;
 
     // Distinguish between #channel and user
-    if (cmd.args[0][0] == '#')
+    if(cmd.args[0][0] == '#')
     {
         std::string channel_name = cmd.args[0];
         channel_name.erase(0, 1);
 
         Channel* channel;
-        if (!(channel = this->getChannel(channel_name)))
+        if(!(channel = this->getChannel(channel_name)))
         {
             this->reply(ERR_NOSUCHCHANNEL, user, channel_name, "");
             return;
         }
-        if (!channel->isUserConnected(user))
+        if(!channel->isUserConnected(user))
         {
             this->reply(ERR_CANNOTSENDTOCHAN, user, channel->getName(), "");
             return;
         }
-        msg = ":" + user.getPrefix() + " PRIVMSG #" + channel->getName() +
-              " :" + cmd.args[1] + "\r\n";
+        msg = ":" + user.getPrefix() + " PRIVMSG #" + channel->getName() + " :" + cmd.args[1] +
+              "\r\n";
         channel->broadcast(user, msg);
         return;
     }
     User* target;
-    if (!(target = this->getUser(cmd.args[0])))
+    if(!(target = this->getUser(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHNICK, user, cmd.args[0], "");
         return;
     }
-    msg = ":" + user.getPrefix() + " PRIVMSG " + target->getNick() + " :" +
-          cmd.args[1] + "\r\n";
+    msg = ":" + user.getPrefix() + " PRIVMSG " + target->getNick() + " :" + cmd.args[1] + "\r\n";
 
     send(target->getFd(), msg.c_str(), msg.size(), 0);
 }
@@ -315,19 +305,18 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd)
 void Server::cmdNick(User& user, const ParsedCommand& cmd)
 {
     // We check if the new nickname is already in use
-    if (this->getUser(cmd.args[0]))
+    if(this->getUser(cmd.args[0]))
     {
         this->reply(ERR_NICKNAMEINUSE, user, cmd.args[0], "");
         return;
     }
 
-    std::string reply =
-        ":" + user.getPrefix() + " NICK :" + cmd.args[0] + "\r\n";
+    std::string reply = ":" + user.getPrefix() + " NICK :" + cmd.args[0] + "\r\n";
     user.setNick(cmd.args[0]);
 
-    if (!user.isRegistered())
+    if(!user.isRegistered())
     {
-        if (!user.getUsername().empty())
+        if(!user.getUsername().empty())
         {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
@@ -337,13 +326,12 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd)
 
     send(user.getFd(), reply.c_str(), reply.length(), 0);
     std::vector<Channel*> user_channels = user.getChannels();
-    for (size_t i = 0; i < user_channels.size(); i++)
-        user_channels[i]->broadcast(user, reply);
+    for(size_t i = 0; i < user_channels.size(); i++) user_channels[i]->broadcast(user, reply);
 }
 
 void Server::cmdUser(User& user, const ParsedCommand& cmd)
 {
-    if (user.isRegistered())
+    if(user.isRegistered())
     {
         this->reply(ERR_ALREADYREGISTRED, user, "", "");
         return;
@@ -355,7 +343,7 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd)
     user.setUsername(cmd.args[0]);
     user.setRealname(cmd.args[3]);
 
-    if (!user.getNick().empty() && !user.getUsername().empty())
+    if(!user.getNick().empty() && !user.getUsername().empty())
     {
         user.setRegistered(true);
         this->reply(RPL_WELCOME, user, "", "");
@@ -366,8 +354,8 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd)
 {
     Channel* channel;
 
-    (void)user;
-    if (!(channel = this->getChannel(cmd.args[0])))
+    (void) user;
+    if(!(channel = this->getChannel(cmd.args[0])))
     {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;

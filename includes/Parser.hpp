@@ -18,8 +18,8 @@
 
 struct ParsedCommand
 {
-    std::string command;           // e.g., "JOIN"
-    std::vector<std::string> args; // e.g., {"#42", "mypassword"}
+    std::string              command; // e.g., "JOIN"
+    std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
 };
 
 void IsValidCmd(ParsedCommand* pc, int* cmd_code);
