@@ -1,28 +1,38 @@
 Language:        Cpp
 BasedOnStyle:    LLVM
 Standard:        c++03
+
+# Layout & Indentation
 IndentWidth:     4
-TabWidth:        8
+TabWidth:        4
 UseTab:          Never
-
-BreakBeforeBraces: Allman
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: Inline
-
-ColumnLimit:     100
+ColumnLimit:     120
 AccessModifierOffset: -4
-IndentCaseLabels: true
-SpaceAfterCStyleCast: true
 PointerAlignment: Left
-SpaceBeforeParens: Never
-Cpp11BracedListStyle: true
 
-AlignConsecutiveAssignments: true
+# Bracing (LLVM Default: Attached)
+BreakBeforeBraces: Attach
+
+# Single Line Rules (Aggressive)
+AllowShortBlocksOnASingleLine:       Always  # Covers try/catch
+AllowShortCaseLabelsOnASingleLine:   true
+AllowShortFunctionsOnASingleLine:    All     # Inline methods
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLambdasOnASingleLine:      All
+AllowShortLoopsOnASingleLine:        true
+
+# Alignment & Spacing
+AlignAfterOpenBracket:        BlockIndent
+AlignConsecutiveAssignments:  true
 AlignConsecutiveDeclarations: true
-BinPackArguments: false
-BinPackParameters: false
+BinPackArguments:             false
+BinPackParameters:            false
+Cpp11BracedListStyle:         true
+IndentCaseLabels:             true
+SpaceAfterCStyleCast:         true
+SpaceBeforeParens:            Never
 
+# Includes (Option 1: Grouped)
 SortIncludes:    CaseSensitive
 IncludeBlocks:   Regroup
 
