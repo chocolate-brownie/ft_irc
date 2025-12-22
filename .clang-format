@@ -1,12 +1,12 @@
 Language:        Cpp
 BasedOnStyle:    LLVM
-Standard:        c++03
+Standard:        Latest
 
 # Layout & Indentation
 IndentWidth:     4
 TabWidth:        4
 UseTab:          Never
-ColumnLimit:     120
+ColumnLimit:     100
 AccessModifierOffset: -4
 PointerAlignment: Left
 
@@ -14,9 +14,9 @@ PointerAlignment: Left
 BreakBeforeBraces: Attach
 
 # Single Line Rules (Aggressive)
-AllowShortBlocksOnASingleLine:       Always  # Covers try/catch
+AllowShortBlocksOnASingleLine:       Always
 AllowShortCaseLabelsOnASingleLine:   true
-AllowShortFunctionsOnASingleLine:    All     # Inline methods
+AllowShortFunctionsOnASingleLine:    All
 AllowShortIfStatementsOnASingleLine: Always
 AllowShortLambdasOnASingleLine:      All
 AllowShortLoopsOnASingleLine:        true
@@ -30,9 +30,10 @@ BinPackParameters:            false
 Cpp11BracedListStyle:         true
 IndentCaseLabels:             true
 SpaceAfterCStyleCast:         true
-SpaceBeforeParens:            Never
 
-# Includes (Option 1: Grouped)
+# Standard Spacing: Space for 'if ( )', no space for 'func( )'
+SpaceBeforeParens:            ControlStatements
+
+# Includes (Grouped)
 SortIncludes:    CaseSensitive
 IncludeBlocks:   Regroup
-

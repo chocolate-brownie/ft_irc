@@ -48,8 +48,7 @@
 #include "Parser.hpp"
 #include "User.hpp"
 
-class Server
-{
+class Server {
 private:
     int         _port;
     std::string _password;

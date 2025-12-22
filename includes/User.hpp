@@ -19,8 +19,7 @@
 class Server;
 class Channel;
 
-class User
-{
+class User {
 private:
     int                   _userSocketFd;
     std::string           _nick;     // From NICK command
