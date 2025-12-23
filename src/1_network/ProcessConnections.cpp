@@ -8,9 +8,15 @@ void Server::handleNewConnection() {
     socklen_t               addrlen;
 
     addrlen = sizeof(remoteaddr);
+
     if ((newfd = accept(_listener, (struct sockaddr*) &remoteaddr, &addrlen)) == -1)
         std::cerr << "accpet" << std::endl;
     else {
+        if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1) {
+            std::cerr << "fcntl failed" << std::endl;
+            close(newfd);
+            return;
+        }
         std::cout << "✅ New connection from " << getClientIP(remoteaddr) << " on socket " << newfd
                   << std::endl;
         addToTheRoom(newfd);

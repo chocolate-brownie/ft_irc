@@ -30,6 +30,8 @@ private:
 
     bool _isRegistered;
 
+    std::string _buffer;
+
 public:
     User(int fd);
     User(const User& other);
@@ -40,6 +42,10 @@ public:
     void                  addChannel(Channel& channel);
     void                  removeChannel(Channel& channel);
     std::vector<Channel*> getChannels();
+
+    void        appendBuffer(const std::string& data);
+    bool        hasCompleteMessage() const;
+    std::string extractMessage();
 
     // GETTERS
     int         getFd() const;
