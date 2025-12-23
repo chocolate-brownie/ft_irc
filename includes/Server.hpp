@@ -58,7 +58,7 @@ private:
     std::vector<struct pollfd> _pfds;   // room for the connections
 
     std::vector<Channel*> _channels;
-    std::vector<User*>    _users;
+    std::map<int, User*>  _users;
 
     Server(const Server& other);
     Server& operator=(const Server& other);
@@ -75,7 +75,7 @@ private:
     void processConnections();
     void handleNewConnection();
     bool handleClientData(int client_fd);
-    void addToTheRoom(int fd);
+    void addToTheRoom(int fd, struct sockaddr_storage* remoteadd);
     void removeFromTheRoom(int fd);
 
     // Util methods regarding to the network-engine

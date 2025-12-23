@@ -1,4 +1,5 @@
 #include "../../includes/Server.hpp"
+#include "../../includes/User.hpp"
 
 std::string Server::portToString(int port) {
     std::stringstream ss;

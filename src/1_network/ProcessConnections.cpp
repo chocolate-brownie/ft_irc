@@ -1,4 +1,6 @@
+#include "../../includes/Parser.hpp"
 #include "../../includes/Server.hpp"
+#include "../../includes/User.hpp"
 
 /* accept() the new client give him an fd(accept() returns a new fd) and push that fd in to the
  * room (aka vector) with other existing clients */
@@ -8,19 +10,25 @@ void Server::handleNewConnection() {
     socklen_t               addrlen;
 
     addrlen = sizeof(remoteaddr);
+
     if ((newfd = accept(_listener, (struct sockaddr*) &remoteaddr, &addrlen)) == -1)
         std::cerr << "accpet" << std::endl;
     else {
+        if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1) {
+            std::cerr << "fcntl failed" << std::endl;
+            close(newfd);
+            return;
+        }
         std::cout << "✅ New connection from " << getClientIP(remoteaddr) << " on socket " << newfd
                   << std::endl;
-        addToTheRoom(newfd);
+
+        addToTheRoom(newfd, &remoteaddr);
     }
 }
 
 bool Server::handleClientData(int client_fd) {
     char buf[256];
-
-    int nbytes = recv(client_fd, buf, sizeof(buf), 0); // 1. READ
+    int  nbytes = recv(client_fd, buf, sizeof(buf), 0); // 1. READ
 
     // 1. Check health of the recv()
     if (nbytes <= 0) {
@@ -34,8 +42,31 @@ bool Server::handleClientData(int client_fd) {
     }
 
     // 3. PROCESS (Success)
-    buf[nbytes] = '\0';
-    std::cout << "Received: " << buf << std::endl;
+    User* user = _users[client_fd];
+    user->appendBuffer(std::string(buf, nbytes));
+
+    while (user->hasCompleteMessage()) {
+        std::string command = user->extractMessage();
+
+        std::cout << "HANDING OFF TO PARSER: \"" << command << "\" from User " << user->getFd()
+                  << std::endl;
+
+        ParsedCommand parsed = Parser::parse(command);
+
+        // --- DEBUGGING PARSER OUTPUT ---
+        std::cout << "DEBUG: Parsed Command Name: '" << parsed.command << "'" << std::endl;
+        std::cout << "DEBUG: Parsed Command Args (" << parsed.args.size() << "):";
+        for (size_t i = 0; i < parsed.args.size(); ++i) {
+            std::cout << " '" << parsed.args[i] << "'";
+        }
+        std::cout << std::endl;
+        // --- END DEBUGGING PARSER OUTPUT ---
+
+        // TODO: team: Implement Server::executeCommand
+        // This function should dispatch the 'parsed' command to the appropriate
+        // handler (e.g., cmdNick, cmdJoin, etc.)
+        // executeCommand(*user, parsed);
+    }
     return true; // They are alive keep i as it is
 }
 

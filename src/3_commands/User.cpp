@@ -54,3 +54,17 @@ void User::setUsername(const std::string& username) { _username = username; }
 void User::setHostname(const std::string& host) { _hostname = host; }
 
 void User::setRealname(const std::string& real) { _realname = real; }
+
+// Buffer Management stuff useful for the network engine completion
+void User::appendBuffer(const std::string& data) { _buffer += data; }
+
+bool User::hasCompleteMessage() const { return _buffer.find("\r\n") != std::string::npos; }
+
+std::string User::extractMessage() {
+    size_t pos = _buffer.find("\r\n");
+    if (pos == std::string::npos) return "";
+
+    std::string message = _buffer.substr(0, pos);
+    _buffer.erase(0, pos + 2);
+    return message;
+}

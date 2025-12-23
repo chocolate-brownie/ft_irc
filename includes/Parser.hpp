@@ -15,6 +15,7 @@
 #define NICK 7
 #define USER 8
 #define PART 9
+#define PASS 10
 
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"
@@ -31,6 +32,7 @@ void IsValid_NICK(ParsedCommand* pc);
 void IsValid_MODE(ParsedCommand* pc);
 void IsValid_USER(ParsedCommand* pc);
 void IsValid_PART(ParsedCommand* pc);
+void IsValid_PASS(ParsedCommand* pc);
 
 class Parser {
 private:
