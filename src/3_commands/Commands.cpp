@@ -9,10 +9,10 @@ Channel* Server::getChannel(const std::string& name) {
 }
 
 User* Server::getUser(const std::string& name) {
-    for (std::vector<User*>::iterator it = _users.begin(); it != _users.end(); it++) {
-        if ((*it)->getNick() == name) return (*it);
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        if (it->second->getNick() == name) { return it->second; }
     }
-    return (NULL);
+    return NULL;
 }
 
 std::string intToString(int i) {

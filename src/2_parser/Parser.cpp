@@ -28,6 +28,7 @@ ParsedCommand Parser::parse(const std::string& input) {
         case NICK: IsValid_NICK(&pc); break;
         case USER: IsValid_USER(&pc); break;
         case PART: IsValid_PART(&pc); break;
+        case PASS: IsValid_PASS(&pc); break;
     }
 
     return pc;
@@ -72,7 +73,7 @@ ParsedCommand Parser::split(const std::string& input) {
 // Validates command name
 void IsValidCmd(ParsedCommand* pc, int* cmd_code) {
     std::string cmds_list[] = {
-        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART"
+        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS"
     };
 
     size_t i;
@@ -268,4 +269,10 @@ void IsValid_PART(ParsedCommand* pc) {
     // param must be channel
     if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
         throw std::invalid_argument("Wrong channel for PART");
+}
+
+void IsValid_PASS(ParsedCommand* pc) {
+    if (pc->args.size() != 1) {
+        throw std::invalid_argument("Wrong number of parameters for PASS");
+    }
 }

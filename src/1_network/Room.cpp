@@ -1,7 +1,7 @@
 #include "../../includes/Server.hpp"
 
 /* Add a new fd to the std::vector<struct pollfd> _pfds; */
-void Server::addToTheRoom(int fd) {
+void Server::addToTheRoom(int fd, struct sockaddr_storage* remoteaddr) {
     if (_pfds.size() >= _fdsize) {
         std::cerr << "Room is full! Rejecting client." << std::endl;
         close(fd);
@@ -10,18 +10,32 @@ void Server::addToTheRoom(int fd) {
 
     struct pollfd new_client = makePollFds(fd, POLLIN);
     _pfds.push_back(new_client);
-    std::cout << "Client added to the room. Total people: " << _pfds.size() << std::endl;
+
+    User* newUser = new User(fd);
+    newUser->setHostname(getClientIP(*remoteaddr));
+    _users[fd] = newUser;
+
+    std::cout << "Client added to the server. Total people: " << _pfds.size() << std::endl;
 }
 
 void Server::removeFromTheRoom(int fd) {
     for (std::vector<struct pollfd>::iterator it = _pfds.begin(); it != _pfds.end(); ++it) {
         if (it->fd == fd) {
+            // Found the client to remove first remove from the std::map
+            User* userToDelete = _users.at(fd); // .at() for bounds checking
+            delete userToDelete;
+            userToDelete = NULL;
+            _users.erase(fd);
+
             std::cout << "Client " << fd << " removed from room. Total people: " << _pfds.size() - 1
                       << std::endl;
+
+            // Then remove from the std::vector
             close(fd);
             _pfds.erase(it);
             return;
         }
     }
+
     std::cerr << "Client " << fd << " not found in room" << std::endl;
 }
