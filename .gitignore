@@ -41,4 +41,5 @@
 *.dwo
 
 .gemini/
+.vscode/
 gha-creds-*.json
