@@ -37,6 +37,8 @@ Instead of us wasting time worrying about different coding styles (like spaces, 
 
 The `.clang-format` file we have is already set up for us. It's based on the LLVM style and enforces C++03 (C++98) rules , 4-space indents, and a `ColumnLimit` of 100, which is perfect for our project.
 
+``find src includes -name "*.cpp" -o -name "*.hpp" | xargs clang-format -i``
+
 ### 🔧 How to Use It in VS Code (in 3 steps)
 
 1.  **Install the Extension:**
