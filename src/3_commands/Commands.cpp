@@ -338,11 +338,15 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
     std::string reply = ":" + user.getPrefix() + " NICK :" + cmd.args[0] + "\r\n";
     user.setNick(cmd.args[0]);
 
-    if (!user.isRegistered()) {
-        if (!user.getUsername().empty()) {
+    if (!user.isRegistered() && !user.getUsername().empty()) {
+        if (user.isPassGiven()) {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
         }
+		else
+		{
+			//DISCONNECT USER
+		}
         return;
     }
 
@@ -363,7 +367,7 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd) {
     user.setUsername(cmd.args[0]);
     user.setRealname(cmd.args[3]);
 
-    if (!user.getNick().empty() && !user.getUsername().empty()) {
+    if (!user.getNick().empty() && user.isPassGiven()) {
         user.setRegistered(true);
         this->reply(RPL_WELCOME, user, "", "");
     }
@@ -395,5 +399,6 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdPass(User& user, const ParsedCommand& cmd) {
-	
+    if (cmd.args[0].compare(_password) != 0) this->reply(ERR_PASSWDMISMATCH, user, "", "");
+    user.setPassGiven(true);
 }
