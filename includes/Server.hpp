@@ -38,6 +38,7 @@
 #define ERR_NOTREGISTERED 451
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTRED 462
+#define ERR_PASSWDMISMATCH 464
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
 #define ERR_INVITEONLYCHAN 473
@@ -100,9 +101,10 @@ public:
     void cmdNick(User& user, const ParsedCommand& cmd);
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
+    void cmdPass(User& user, const ParsedCommand& cmd);
 
-	void	addChannel(Channel* channel);
-	void	rmvChannel(Channel* channel);
+    void     addChannel(Channel* channel);
+    void     rmvChannel(Channel* channel);
     Channel* getChannel(const std::string& name);
     User*    getUser(const std::string& name);
 };

@@ -28,7 +28,7 @@ void Server::handleNewConnection() {
 
 bool Server::handleClientData(int client_fd) {
     char buf[256];
-    int  nbytes = recv(client_fd, buf, sizeof(buf), 0); // 1. READ
+    int  nbytes = recv(client_fd, buf, sizeof(buf), 0);
 
     // 1. Check health of the recv()
     if (nbytes <= 0) {

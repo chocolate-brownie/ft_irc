@@ -4,7 +4,7 @@
 
 // FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
 // BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
-User::User(int fd) : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false) {}
+User::User(int fd) : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false), _passGiven(false) {}
 
 User::~User() {
     close(_userSocketFd);
@@ -46,6 +46,10 @@ std::string User::getPrefix() const { return (_nick + "!" + _username + "@" + _h
 bool User::isRegistered() const { return (_isRegistered); }
 
 void User::setRegistered(bool val) { _isRegistered = val; }
+
+bool User::isPassGiven() const { return (_passGiven); }
+
+void User::setPassGiven(bool val) { _passGiven = val; }
 
 void User::setNick(const std::string& nick) { _nick = nick; }
 

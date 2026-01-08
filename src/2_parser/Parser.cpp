@@ -18,6 +18,7 @@ ParsedCommand Parser::parse(const std::string& input) {
 
     pc = split(input);
     IsValidCmd(&pc, &cmd_code);
+	pc.id = cmd_code;
     switch (cmd_code) {
         case KICK: IsValid_KICK(&pc); break;
         case INVITE: IsValid_INVITE(&pc); break;
@@ -30,7 +31,6 @@ ParsedCommand Parser::parse(const std::string& input) {
         case PART: IsValid_PART(&pc); break;
         case PASS: IsValid_PASS(&pc); break;
     }
-
     return pc;
 }
 

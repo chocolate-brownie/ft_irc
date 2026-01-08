@@ -1,15 +1,16 @@
 #include "../../includes/Server.hpp"
 
 Server::Server(int port, std::string password) : _port(port), _password(password), _fdsize(5) {
-    _commandMap["KICK"]    = &Server::cmdKick;
-    _commandMap["INVITE"]  = &Server::cmdInvite;
-    _commandMap["TOPIC"]   = &Server::cmdTopic;
-    _commandMap["MODE"]    = &Server::cmdMode;
-    _commandMap["JOIN"]    = &Server::cmdJoin;
-    _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
-    _commandMap["NICK"]    = &Server::cmdNick;
-    _commandMap["USER"]    = &Server::cmdUser;
-    _commandMap["PART"]    = &Server::cmdPart;
+    // _commandMap["KICK"]    = &Server::cmdKick;
+    // _commandMap["INVITE"]  = &Server::cmdInvite;
+    // _commandMap["TOPIC"]   = &Server::cmdTopic;
+    // _commandMap["MODE"]    = &Server::cmdMode;
+    // _commandMap["JOIN"]    = &Server::cmdJoin;
+    // _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
+    // _commandMap["NICK"]    = &Server::cmdNick;
+    // _commandMap["USER"]    = &Server::cmdUser;
+    // _commandMap["PART"]    = &Server::cmdPart;
+    // _commandMap["PASS"]    = &Server::cmdPass;
 }
 
 Server::~Server() {}
