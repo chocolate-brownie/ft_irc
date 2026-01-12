@@ -110,14 +110,14 @@ User* Server::getUser(const std::string& name) {
 
 void Server::executeCommand(User& user, const ParsedCommand& cmd) {
     if (!user.isRegistered()) {
-        bool isLoginCmd = (cmd.id == PASS || cmd.id == NICK || cmd.id == USER);
+        bool isLoginCmd = (cmd.cmd == PASS || cmd.cmd == NICK || cmd.cmd == USER);
         if (!isLoginCmd) {
             this->reply(ERR_NOTREGISTERED, user, "", "");
             return;
         }
     }
 
-    switch (cmd.id) {
+    switch (cmd.cmd) {
         case KICK: cmdKick(user, cmd); break;
         case INVITE: cmdInvite(user, cmd); break;
         case TOPIC: cmdTopic(user, cmd); break;
