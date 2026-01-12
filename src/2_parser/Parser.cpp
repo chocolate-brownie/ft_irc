@@ -14,11 +14,11 @@ Parser::~Parser() {}
 // Takes raw string of input and return a parsed command structure
 ParsedCommand Parser::parse(const std::string& input) {
     ParsedCommand pc;
-    int           cmd_code = 0;
 
     pc = split(input);
-    IsValidCmd(&pc, &cmd_code);
-    switch (cmd_code) {
+	if (pc.err) return pc; // id err set to ERR return
+    IsValidCmd(&pc);
+    switch (pc.cmd) {
         case KICK: IsValid_KICK(&pc); break;
         case INVITE: IsValid_INVITE(&pc); break;
         case TOPIC: IsValid_TOPIC(&pc); break;
@@ -29,28 +29,28 @@ ParsedCommand Parser::parse(const std::string& input) {
         case USER: IsValid_USER(&pc); break;
         case PART: IsValid_PART(&pc); break;
         case PASS: IsValid_PASS(&pc); break;
+		default: break;
     }
-
     return pc;
 }
 
 // Splits a raw IRC line into command and arguments
 ParsedCommand Parser::split(const std::string& input) {
-    if (input.empty()) throw std::invalid_argument("Empty");
-
     ParsedCommand pc;
-
+    pc.err = 0;
+    pc.cmd = 0;
+	if (input.empty()) { pc.err = ERR_UNKNOWNCOMMAND; return pc; } // empty
     size_t pos = input.find_first_not_of(" ");
 
     // PREFIX
-    if (pos == std::string::npos) throw std::invalid_argument("Only spaces");
-    if (input[pos] == ':') throw std::invalid_argument("Prefix in input");
+    if (pos == std::string::npos) { pc.err = ERR_UNKNOWNCOMMAND; return pc; } //Only spaces
+    if (input[pos] == ':') { pc.err = ERR_UNKNOWNCOMMAND; return pc; } // Prefix in input
 
     std::string       trimmed = input.substr(pos);
     std::stringstream ss(trimmed);
 
     // COMMAND
-    if (!(ss >> pc.command)) throw std::runtime_error("Failed to read data");
+    if (!(ss >> pc.command)) { pc.err = ERR_UNKNOWNCOMMAND; return pc; } // Failed to read data
 
     // PARAMETERS
     std::string token;
@@ -60,7 +60,7 @@ ParsedCommand Parser::split(const std::string& input) {
             std::string rest;
             std::getline(ss, rest); // reads everything remaining
             trailing += rest;
-            if (trailing.empty()) throw std::invalid_argument("Empty trailing parameter");
+            if (trailing.empty()) { pc.err = ERR_NEEDMOREPARAMS; return pc; } // Empty trailing parameter
             pc.args.push_back(trailing);
             return pc;
         }
@@ -71,7 +71,7 @@ ParsedCommand Parser::split(const std::string& input) {
 }
 
 // Validates command name
-void IsValidCmd(ParsedCommand* pc, int* cmd_code) {
+void IsValidCmd(ParsedCommand* pc) {
     std::string cmds_list[] = {
         "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS"
     };
@@ -79,27 +79,29 @@ void IsValidCmd(ParsedCommand* pc, int* cmd_code) {
     size_t i;
     for (i = 0; i < sizeof(cmds_list) / sizeof(cmds_list[0]); i++) {
         if (cmds_list[i] == pc->command) {
-            *cmd_code = i + 1;
+            pc->cmd = i + 1;
             return;
         }
     }
-    throw std::invalid_argument("Unknown command name");
+    //throw std::invalid_argument("Unknown command name");
+	pc->err = ERR_UNKNOWNCOMMAND;
+	pc->cmd = -1;
 }
 
 // Validates topic setting in a channel command
 // TOPIC <channel> [<topic>]
 void IsValid_TOPIC(ParsedCommand* pc) {
     // number of parameters (1 or 2)
-    if (pc->args.size() < 1 || pc->args.size() > 2)
-        throw std::invalid_argument("Wrong number of parameters for a topic");
-    // 1st param must be channel
-    if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-        throw std::invalid_argument("Wrong channel for a topic");
+    if (pc->args.size() < 1)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // // 1st param must be channel
+    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for a topic");
     // test for printability if there is topic's text
     if (pc->args.size() == 2) {
         for (size_t i = 0; i < pc->args[1].size(); i++) {
             if (!std::isprint(static_cast<unsigned char>(pc->args[1][i])))
-                throw std::invalid_argument("Unprintable character in topic text");
+                { pc->err = ERR_UNKNOWNCOMMAND; return; };
         }
     }
 }
@@ -108,12 +110,12 @@ void IsValid_TOPIC(ParsedCommand* pc) {
 // PRIVMSG <receiver>{,<receiver>} <text to be sent>
 void IsValid_PRIVMSG(ParsedCommand* pc) {
     // number of parameters (2)
-    if (pc->args.size() != 2)
-        throw std::invalid_argument("Wrong number of parameters for a message");
+    if (pc->args.size() < 2)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
     // test for printability for message's text
     for (size_t i = 0; i < pc->args[1].size(); i++) {
         if (!std::isprint(static_cast<unsigned char>(pc->args[1][i])))
-            throw std::invalid_argument("Unprintable character in message text");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     }
 }
 
@@ -121,19 +123,19 @@ void IsValid_PRIVMSG(ParsedCommand* pc) {
 // KICK <channel> <user> [<comment>]
 void IsValid_KICK(ParsedCommand* pc) {
     // number of parameters (2 or 3)
-    if (pc->args.size() != 2 && pc->args.size() != 3)
-        throw std::invalid_argument("Wrong number of parameters for a kick");
-    // 1st param must be channel
-    if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-        throw std::invalid_argument("Wrong channel for a kick");
-    // 2nd param must be user
-    if (!pc->args[1].empty() && pc->args[1][0] == '#')
-        throw std::invalid_argument("Wrong user for a kick");
+    if (pc->args.size() < 2)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // // 1st param must be channel
+    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for a kick");
+    // // 2nd param must be user
+    // if (!pc->args[1].empty() && pc->args[1][0] == '#')
+    //     throw std::invalid_argument("Wrong user for a kick");
     // test for printability if there is comment text for kick
     if (pc->args.size() == 3) {
         for (size_t i = 0; i < pc->args[2].size(); i++) {
             if (!std::isprint(static_cast<unsigned char>(pc->args[2][i])))
-                throw std::invalid_argument("Unprintable character in kick comment");
+                { pc->err = ERR_UNKNOWNCOMMAND; return; };
         }
     }
 }
@@ -142,93 +144,93 @@ void IsValid_KICK(ParsedCommand* pc) {
 // INVITE <nickname> <channel>
 void IsValid_INVITE(ParsedCommand* pc) {
     // number of parameters (2)
-    if (pc->args.size() != 2)
-        throw std::invalid_argument("Wrong number of parameters for an invite");
+    if (pc->args.size() < 2)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
     // 1st param must be nickname
-    if (!pc->args[0].empty() && pc->args[0][0] == '#')
-        throw std::invalid_argument("Wrong user for an invite");
-    // 2nd param must be channel
-    if (pc->args[1].size() < 2 || pc->args[1][0] != '#')
-        throw std::invalid_argument("Wrong channel for an invite");
+    // if (!pc->args[0].empty() && pc->args[0][0] == '#')
+    //     throw std::invalid_argument("Wrong user for an invite");
+    // // 2nd param must be channel
+    // if (pc->args[1].size() < 2 || pc->args[1][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for an invite");
 }
 
 // Validates joining a channel command
 // JOIN <channel> [<key>]
 void IsValid_JOIN(ParsedCommand* pc) {
-    // number of parameters
-    if (pc->args.size() < 1 || pc->args.size() > 2)
-        throw std::invalid_argument("Wrong number of parameters for a join");
-    // 1st param must be channel
-    if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-        throw std::invalid_argument("Wrong channel for a join");
+    // number of parameters (1/2)
+    if (pc->args.size() < 1)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // // 1st param must be channel
+    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for a join");
 }
 
 // Validates setting or changing a nickname command
 // NICK <nickname>
 void IsValid_NICK(ParsedCommand* pc) {
-    // number of parameters
-    if (pc->args.empty() || pc->args.size() != 1)
-        throw std::invalid_argument("Wrong number of parameters to set a nickname");
-    // nickname length
+    // number of parameters (1)
+    if (pc->args.size() < 1)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // nickname length (must be 1-9 chars)
     const std::string& nick = pc->args[0];
     if (nick.size() < 1 || nick.size() > 9)
-        throw std::invalid_argument("Nickname length must be 1-9 characters");
+        { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // check first character
     char first = nick[0];
     if (!std::isalpha(first) && first != '[' && first != ']' && first != '\\' && first != '`' &&
         first != '^' && first != '{' && first != '}' && first != '_')
-        throw std::invalid_argument("Invalid first character in nickname");
+        { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // check remaining characters
     for (size_t i = 1; i < nick.size(); ++i) {
         char c = nick[i];
         if (!std::isalnum(static_cast<unsigned char>(c)) && c != '[' && c != ']' && c != '\\' &&
             c != '`' && c != '^' && c != '{' && c != '}' && c != '_' && c != '-')
-            throw std::invalid_argument("Invalid character in nickname");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     }
 }
 
 // Validates channel mode change command
 // MODE <channel> {[+|-]|i|t|k|o|l} [<limit>/<password>/<user>]
 void IsValid_MODE(ParsedCommand* pc) {
-    // number of parameters
-    if (pc->args.size() < 2 || pc->args.size() > 3)
-        throw std::invalid_argument("Wrong number of parameters for MODE");
-    // 1st param must be channel
-    if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-        throw std::invalid_argument("Wrong channel for MODE");
+    // number of parameters (2/3)
+    if (pc->args.size() < 2)
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // // 1st param must be channel
+    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for MODE");
     // 1st param must be composed of +/- and mode flag
     const std::string& modeStr = pc->args[1];
-    if (modeStr.size() != 2) throw std::invalid_argument("Invalid mode format");
+    if (modeStr.size() != 2) { pc->err = ERR_UNKNOWNCOMMAND; return; };
     char sign = modeStr[0];
     char mode = modeStr[1];
-    if (sign != '+' && sign != '-') throw std::invalid_argument("Invalid mode sign");
+    if (sign != '+' && sign != '-') { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // mode flag can be only i/t/k/o/l
     if (mode != 'i' && mode != 't' && mode != 'k' && mode != 'o' && mode != 'l')
-        throw std::invalid_argument("Unsupported mode");
+        { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // modes without parameters
     if (mode == 'i' || mode == 't') {
-        if (pc->args.size() != 2) throw std::invalid_argument("Mode does not take a parameter");
+        if (pc->args.size() != 2) { pc->err = ERR_UNKNOWNCOMMAND; return; };
         return;
     }
     // modes with parameters only on '+'
     if (sign == '-') {
         if (pc->args.size() != 2)
-            throw std::invalid_argument("Mode does not take a parameter when disabled");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
         return;
     }
     // +k +o +l → parameter required
-    if (pc->args.size() != 3) throw std::invalid_argument("Mode requires a parameter");
+    if (pc->args.size() != 3) { pc->err = ERR_NEEDMOREPARAMS; return; }
     // param check for k/o/l
     const std::string& param = pc->args[2];
     if (mode == 'k') {
-        if (param.empty()) throw std::invalid_argument("Channel key cannot be empty");
+        if (param.empty()) { pc->err = ERR_UNKNOWNCOMMAND; return; };
     } else if (mode == 'o') {
         if (param.empty() || param[0] == '#')
-            throw std::invalid_argument("Invalid nickname for operator mode");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     } else if (mode == 'l') {
         for (size_t i = 0; i < param.size(); ++i) {
             if (!std::isdigit(static_cast<unsigned char>(param[i])))
-                throw std::invalid_argument("User limit must be numeric");
+                { pc->err = ERR_UNKNOWNCOMMAND; return; };
         }
     }
 }
@@ -236,43 +238,45 @@ void IsValid_MODE(ParsedCommand* pc) {
 // Validates user registration command
 // USER <username> <hostname> <servername> <realname>
 void IsValid_USER(ParsedCommand* pc) {
-    // number of parameters
-    if (pc->args.size() != 4) throw std::invalid_argument("Wrong number of parameters for USER");
+    // number of parameters (4)
+    if (pc->args.size() < 4) { pc->err = ERR_NEEDMOREPARAMS; return; }
 
     const std::string& username   = pc->args[0];
     const std::string& hostname   = pc->args[1];
     const std::string& servername = pc->args[2];
     const std::string& realname   = pc->args[3];
     // username check
-    if (username.empty()) throw std::invalid_argument("Username cannot be empty");
+    if (username.empty()) { pc->err = ERR_UNKNOWNCOMMAND; return; };
     for (size_t i = 0; i < username.size(); ++i)
         if (!std::isalnum(static_cast<unsigned char>(username[i])) && username[i] != '-' &&
             username[i] != '_')
-            throw std::invalid_argument("Invalid character in username");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // hostname check
     for (size_t i = 0; i < hostname.size(); ++i)
         if (!std::isprint(static_cast<unsigned char>(hostname[i])))
-            throw std::invalid_argument("Invalid character in hostname");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // servername check
     for (size_t i = 0; i < servername.size(); ++i)
         if (!std::isprint(static_cast<unsigned char>(servername[i])))
-            throw std::invalid_argument("Invalid character in servername");
+            { pc->err = ERR_UNKNOWNCOMMAND; return; };
     // realname check
-    if (realname.empty()) throw std::invalid_argument("Realname cannot be empty");
+    if (realname.empty()) { pc->err = ERR_UNKNOWNCOMMAND; return; };
 }
 
 // Validates leaving a channel command
 // PART <channel>{,<channel>}
 void IsValid_PART(ParsedCommand* pc) {
-    // number of parameters
-    if (pc->args.size() != 1) throw std::invalid_argument("Wrong number of parameters for PART");
-    // param must be channel
-    if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-        throw std::invalid_argument("Wrong channel for PART");
+    // number of parameters (1)
+    if (pc->args.size() < 1) { pc->err = ERR_NEEDMOREPARAMS; return; }
+    // // param must be channel
+    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
+    //     throw std::invalid_argument("Wrong channel for PART");
 }
 
+// Validates password
+// PASS <password>
 void IsValid_PASS(ParsedCommand* pc) {
-    if (pc->args.size() != 1) {
-        throw std::invalid_argument("Wrong number of parameters for PASS");
+    if (pc->args.size() < 1) {
+        { pc->err = ERR_NEEDMOREPARAMS; return; }
     }
 }

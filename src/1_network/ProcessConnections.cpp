@@ -28,7 +28,7 @@ void Server::handleNewConnection() {
 
 bool Server::handleClientData(int client_fd) {
     char buf[256];
-    int  nbytes = recv(client_fd, buf, sizeof(buf), 0); // 1. READ
+    int  nbytes = recv(client_fd, buf, sizeof(buf), 0);
 
     // 1. Check health of the recv()
     if (nbytes <= 0) {
@@ -52,6 +52,8 @@ bool Server::handleClientData(int client_fd) {
                   << std::endl;
 
         ParsedCommand parsed = Parser::parse(command);
+		//if (parsed.id)
+			//reply(parsed.id, ...)
 
         // --- DEBUGGING PARSER OUTPUT ---
         std::cout << "DEBUG: Parsed Command Name: '" << parsed.command << "'" << std::endl;
@@ -62,10 +64,7 @@ bool Server::handleClientData(int client_fd) {
         std::cout << std::endl;
         // --- END DEBUGGING PARSER OUTPUT ---
 
-        // TODO: team: Implement Server::executeCommand
-        // This function should dispatch the 'parsed' command to the appropriate
-        // handler (e.g., cmdNick, cmdJoin, etc.)
-        // executeCommand(*user, parsed);
+        executeCommand(*user, parsed);
     }
     return true; // They are alive keep i as it is
 }

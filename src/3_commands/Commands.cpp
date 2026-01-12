@@ -1,24 +1,34 @@
 #include "../../includes/Server.hpp"
 
-// Returns a Channel from the vector given its name
-Channel* Server::getChannel(const std::string& name) {
-    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
-        if ((*it)->getName() == name) return (*it);
-    }
-    return (NULL);
-}
-
-User* Server::getUser(const std::string& name) {
-    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
-        if (it->second->getNick() == name) { return it->second; }
-    }
-    return NULL;
-}
 
 std::string intToString(int i) {
     std::stringstream ss;
     ss << i;
     return ss.str();
+}
+
+int StringToInt(std::string str) {
+    std::stringstream ss(str);
+    int               res;
+    ss >> res;
+    return (res);
+}
+
+std::string Server::getWelcomeMsg(User& user) {
+    std::string serverName = "ft_irc.42.fr";
+    std::string nick       = ((user.getNick().empty()) ? "*" : user.getNick());
+    std::string username   = user.getUsername();
+
+    std::string msg = ":" + serverName + " 001 " + nick +
+                      " :Welcome to the Internet Relay Network " + nick + "!" + username + "@" +
+                      user.getHostname() + "\r\n";
+    msg += ":" + serverName + " 002 " + nick + " :Your host is " + serverName +
+           ", running version 1.0\r\n";
+    msg += ":" + serverName + " 003 " + nick + " :This server was created " + this->getStartTime() +
+           "\r\n";
+    msg += ":" + serverName + " 004 " + nick + " " + serverName + " 1.0 o itkl\r\n";
+
+    return (msg);
 }
 
 void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
@@ -28,7 +38,7 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
     std::string user_nick = ((user.getNick().empty()) ? "*" : user.getNick());
     std::string msg       = ":ft_irc.42.fr " + intToString(id) + " " + user_nick + " ";
     switch (id) {
-        case RPL_WELCOME: msg += " :Welcome to our ft_irc " + user.getPrefix() + "\r\n"; break;
+        case RPL_WELCOME: msg = getWelcomeMsg(user); break;
         case RPL_NOTOPIC: msg += arg1 + " :No topic is set\r\n"; break;
         case RPL_TOPIC:
             // Arg1 = channel name, Arg2 = topic
@@ -54,6 +64,7 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
         case ERR_NOTREGISTERED: msg += " :You have not registered\r\n"; break;
         case ERR_NEEDMOREPARAMS: msg += arg1 + " :Not enough parameters\r\n"; break;
         case ERR_ALREADYREGISTRED: msg += " :You're already registered\r\n"; break;
+        case ERR_PASSWDMISMATCH: msg += arg1 + " :Password incorrect\r\n"; break;
         case ERR_CHANNELISFULL: msg += arg1 + " :Channel is full (+l)\r\n"; break;
         case ERR_UNKNOWNMODE:
             // arg1 = the unexpected char
@@ -65,6 +76,60 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
         default: msg += " :Unknown error\r\n"; break;
     }
     send(user.getFd(), msg.c_str(), msg.length(), 0);
+}
+
+
+
+
+
+void Server::addChannel(Channel* channel) { _channels.push_back(channel); }
+
+void Server::rmvChannel(Channel* channel) {
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        if ((*it) == channel) {
+            _channels.erase(it);
+            return;
+        }
+    }
+}
+
+// Returns a Channel from the vector given its name
+Channel* Server::getChannel(const std::string& name) {
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        if ((*it)->getName() == name) return (*it);
+    }
+    return (NULL);
+}
+
+User* Server::getUser(const std::string& name) {
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        if (it->second->getNick() == name) { return it->second; }
+    }
+    return NULL;
+}
+
+void Server::executeCommand(User& user, const ParsedCommand& cmd) {
+    if (!user.isRegistered()) {
+        bool isLoginCmd = (cmd.cmd == PASS || cmd.cmd == NICK || cmd.cmd == USER);
+        if (!isLoginCmd) {
+            this->reply(ERR_NOTREGISTERED, user, "", "");
+            return;
+        }
+    }
+
+    switch (cmd.cmd) {
+        case KICK: cmdKick(user, cmd); break;
+        case INVITE: cmdInvite(user, cmd); break;
+        case TOPIC: cmdTopic(user, cmd); break;
+        case MODE: cmdMode(user, cmd); break;
+        case JOIN: cmdJoin(user, cmd); break;
+        case PRIVMSG: cmdPrivmsg(user, cmd); break;
+        case NICK: cmdNick(user, cmd); break;
+        case USER: cmdUser(user, cmd); break;
+        case PART: cmdPart(user, cmd); break;
+        case PASS: cmdPass(user, cmd); break;
+        default: this->reply(ERR_UNKNOWNCOMMAND, user, cmd.command, ""); break;
+    }
 }
 
 void Server::cmdKick(User& user, const ParsedCommand& cmd) {
@@ -156,7 +221,77 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd) {
     }
 }
 
-void Server::cmdMode(User& user, const ParsedCommand& cmd) { (void) user, (void) cmd; }
+void Server::cmdMode(User& user, const ParsedCommand& cmd) {
+    Channel* channel;
+    if (!(channel = this->getChannel(cmd.args[0]))) {
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+        return;
+    }
+    if (!channel->isOperator(user)) {
+        this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
+        return;
+    }
+
+    // state indicates whether we are adding a flag or removing it
+    // arg_index points at the next argument out flags refer to
+    std::string flags     = cmd.args[1];
+    std::string changes   = "";
+    std::string log       = "";
+    bool        state     = true;
+    int         arg_index = 2;
+    char        c;
+    for (size_t i = 0; i < flags.length(); i++) {
+        c = flags[i];
+        switch (c) {
+            case '+': state = true; break;
+            case '-': state = false; break;
+            case 'i':
+                channel->setInviteMode(state);
+                changes += (state ? "+i" : "-i");
+                break;
+            case 't':
+                channel->setTopicMode(state);
+                changes += (state ? "+t" : "-t");
+                break;
+            case 'k':
+                channel->setKeyMode(state);
+                channel->setKey(cmd.args[arg_index]);
+                changes += (state ? "+k" : "-k");
+                log += cmd.args[arg_index++] + " ";
+                break;
+            case 'o':
+                User* target;
+                if (!(target = this->getUser(cmd.args[arg_index]))) {
+                    this->reply(ERR_NOSUCHNICK, user, cmd.args[arg_index], "");
+                    return;
+                }
+                if (state) {
+                    if (!channel->isUserConnected(*target)) channel->addUser(*target);
+                    channel->addOperator(*target);
+                    changes += "+o";
+                } else {
+                    channel->removeOperator(*target);
+                    changes += "-o";
+                }
+                log += cmd.args[arg_index++] + " ";
+                break;
+            case 'l':
+                if (state) {
+                    int limit = StringToInt(cmd.args[arg_index]);
+                    if (!limit || limit < 0) continue;
+                    channel->setLimit(limit);
+                    changes += "+l";
+                    log += cmd.args[arg_index++];
+                } else
+                    changes += "-l";
+                channel->setLimitMode(state);
+                break;
+            default: this->reply(ERR_UNKNOWNMODE, user, std::string(1, c), ""); return;
+        }
+        std::string mode_msg =
+            ":" + user.getPrefix() + " MODE " + cmd.args[0] + " " + changes + log + "\r\n";
+    }
+}
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
     Channel*    channel;
@@ -166,10 +301,15 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
     // Check if channel exists and if user is already connected (in this case we
     // just ignore him)
     if (!(channel = this->getChannel(cmd.args[0]))) {
-        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+        if (cmd.args[0][0] != '#')
+			channel = new Channel('#' + cmd.args[0]);
+		else
+			channel = new Channel(cmd.args[0]);
+        this->addChannel(channel);
+        channel->addUser(user);
+        channel->addOperator(user);
+    } else if (channel->isUserConnected(user))
         return;
-    }
-    if (channel->isUserConnected(user)) return;
     // When invite mode is active, if user is invited he can join else no
     if (channel->getInviteMode()) {
         if (!channel->isInvited(user)) {
@@ -239,10 +379,12 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
     std::string reply = ":" + user.getPrefix() + " NICK :" + cmd.args[0] + "\r\n";
     user.setNick(cmd.args[0]);
 
-    if (!user.isRegistered()) {
-        if (!user.getUsername().empty()) {
+    if (!user.isRegistered() && !user.getUsername().empty()) {
+        if (user.isPassGiven()) {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
+        } else {
+            // DISCONNECT USER
         }
         return;
     }
@@ -264,18 +406,42 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd) {
     user.setUsername(cmd.args[0]);
     user.setRealname(cmd.args[3]);
 
-    if (!user.getNick().empty() && !user.getUsername().empty()) {
-        user.setRegistered(true);
-        this->reply(RPL_WELCOME, user, "", "");
+    if (!user.getNick().empty()) {
+        if (user.isPassGiven()) {
+            user.setRegistered(true);
+            this->reply(RPL_WELCOME, user, "", "");
+        } else {
+            // DISCONNECT USER
+        }
     }
 }
 
 void Server::cmdPart(User& user, const ParsedCommand& cmd) {
     Channel* channel;
 
-    (void) user;
+    // We check if channel exist and if user is connected
     if (!(channel = this->getChannel(cmd.args[0]))) {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
+    if (!channel->isUserConnected(user)) {
+        this->reply(ERR_NOTONCHANNEL, user, cmd.args[0], "");
+        return;
+    }
+    std::string reason = (cmd.args.size() > 1) ? cmd.args[1] : "Leaving";
+    std::string reply  = ":" + user.getPrefix() + " PART " + cmd.args[0] + " :" + reason + "\r\n";
+    channel->broadcast(reply);
+
+    channel->removeUser(user);
+    user.removeChannel(*channel);
+
+    // If the channel has no user left we delete it
+    // NOTE: WE PROBABLY NEED TO FREE SOMETHING SOMEWHERE
+    std::string list = channel->getUserList();
+    if (list.empty()) this->rmvChannel(channel);
+}
+
+void Server::cmdPass(User& user, const ParsedCommand& cmd) {
+    if (cmd.args[0].compare(_password) != 0) this->reply(ERR_PASSWDMISMATCH, user, "", "");
+    user.setPassGiven(true);
 }

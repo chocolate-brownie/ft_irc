@@ -125,7 +125,30 @@ void Channel::setTopic(std::string topic) { _topic = topic; }
 
 int Channel::getLimit() const { return (_userlimit); }
 
-void Channel::setLimit(int limit) { _userlimit = limit; }
+void Channel::setLimit(int limit)
+{
+    _userlimit = limit;
+}
+
+void Channel::setKeyMode(bool mode)
+{
+    _key_mode = mode;
+}
+
+void Channel::setLimitMode(bool mode)
+{
+    _limit_mode = mode;
+}
+
+void Channel::setTopicMode(bool mode)
+{
+    _topic_mode = mode;
+}
+
+void Channel::setInviteMode(bool mode)
+{
+    _invite_mode = mode;
+}
 
 bool Channel::getKeyMode() const { return (_key_mode); }
 
