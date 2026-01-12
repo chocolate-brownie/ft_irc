@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#define ERR_UNKNOWNCOMMAND 421
+#define ERR_NEEDMOREPARAMS 461
+
 #define KICK 1
 #define INVITE 2
 #define TOPIC 3
@@ -20,10 +23,11 @@
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"
     std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
-    int                      id;
+	int                      cmd;     // command code
+	int                      err;      // 0 if correct, ERR num if not
 };
 
-void IsValidCmd(ParsedCommand* pc, int* cmd_code);
+void IsValidCmd(ParsedCommand* pc);
 void IsValid_TOPIC(ParsedCommand* pc);
 void IsValid_PRIVMSG(ParsedCommand* pc);
 void IsValid_KICK(ParsedCommand* pc);
