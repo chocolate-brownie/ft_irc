@@ -19,17 +19,18 @@
 class Server;
 class Channel;
 
-class User
-{
+class User {
 private:
-    int _userSocketFd;
-    std::string _nick;     // From NICK command
-    std::string _username; // From USER command (1st arg)
-    std::string _hostname; // IP from accept()
-    std::string _realname; // From USER command (Last arg)
+    int                   _userSocketFd;
+    std::string           _nick;     // From NICK command
+    std::string           _username; // From USER command (1st arg)
+    std::string           _hostname; // IP from accept()
+    std::string           _realname; // From USER command (Last arg)
     std::vector<Channel*> _channels;
 
     bool _isRegistered;
+
+    std::string _buffer;
 
 public:
     User(int fd);
@@ -38,18 +39,22 @@ public:
     ~User();
 
     // CHANNELS RELATED
-    void addChannel(Channel& channel);
-    void removeChannel(Channel& channel);
+    void                  addChannel(Channel& channel);
+    void                  removeChannel(Channel& channel);
     std::vector<Channel*> getChannels();
 
+    void        appendBuffer(const std::string& data);
+    bool        hasCompleteMessage() const;
+    std::string extractMessage();
+
     // GETTERS
-    int getFd() const;
+    int         getFd() const;
     std::string getNick() const;
     std::string getUsername() const;
     std::string getHostname() const;
     std::string getRealname() const;
     std::string getPrefix() const;
-    bool isRegistered() const;
+    bool        isRegistered() const;
 
     // SETTERS
     void setRegistered(bool val);

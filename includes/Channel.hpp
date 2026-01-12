@@ -18,16 +18,15 @@
 
 class User;
 
-class Channel
-{
+class Channel {
 private:
-    std::string _name;
-    std::string _topic;
-    std::string _key;
+    std::string        _name;
+    std::string        _topic;
+    std::string        _key;
     std::vector<User*> _users;
     std::vector<User*> _operators;
     std::vector<User*> _invited;
-    int _userlimit;
+    int                _userlimit;
 
     bool _key_mode;
     bool _invite_mode;
@@ -46,10 +45,10 @@ public:
     int broadcast(User& source, std::string msg);
 
     // USERS
-    User* isUserConnected(User& user) const;
-    User* isUserConnected(const std::string& nick) const;
-    void addUser(User& user);
-    void removeUser(User& user);
+    User*       isUserConnected(User& user) const;
+    User*       isUserConnected(const std::string& nick) const;
+    void        addUser(User& user);
+    void        removeUser(User& user);
     std::string getUserList() const;
 
     // OPERATORS
@@ -66,11 +65,11 @@ public:
     std::string getName() const;
     std::string getKey() const;
     std::string getTopic() const;
-    int getLimit() const;
-    bool getKeyMode() const;
-    bool getInviteMode() const;
-    bool getTopicMode() const;
-    bool getLimitMode() const;
+    int         getLimit() const;
+    bool        getKeyMode() const;
+    bool        getInviteMode() const;
+    bool        getTopicMode() const;
+    bool        getLimitMode() const;
 
     // SETTERS
     void setName(std::string name);
