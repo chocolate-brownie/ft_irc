@@ -1,6 +1,5 @@
 #include "../../includes/Parser.hpp"
 
-/*
 int main()
 {
     // 1. Create a list of "Fake" network messages
@@ -53,24 +52,18 @@ int main()
     {
         std::cout << "Testing " << i << ": [" << test_cases[i] << "]" << std::endl;
 
-        try
-        {
-            ParsedCommand result = Parser::parse(test_cases[i]);
+        ParsedCommand result = Parser::parse(test_cases[i]);
 
-            std::cout << "  -> Command: " << result.command << std::endl;
-            for(size_t j = 0; j < result.args.size(); j++)
-            {
-                std::cout << "  -> Arg[" << j << "]: " << result.args[j] << std::endl;
-            }
-        }
-        catch(const std::exception& e)
+        std::cout << "  -> Command: " << result.command << std::endl;
+        for(size_t j = 0; j < result.args.size(); j++)
         {
-            std::cerr << "  -> Parse error: " << e.what() << std::endl;
+            std::cout << "  -> Arg[" << j << "]: " << result.args[j] << std::endl;
         }
+		std::cout << "  -> err: " << result.err << std::endl;
 
         std::cout << "--------------------------------" << std::endl;
     }
 
     return 0;
 }
-*/
+

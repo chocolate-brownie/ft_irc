@@ -52,6 +52,8 @@ bool Server::handleClientData(int client_fd) {
                   << std::endl;
 
         ParsedCommand parsed = Parser::parse(command);
+		//if (parsed.id)
+			//reply(parsed.id, ...)
 
         // --- DEBUGGING PARSER OUTPUT ---
         std::cout << "DEBUG: Parsed Command Name: '" << parsed.command << "'" << std::endl;
