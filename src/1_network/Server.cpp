@@ -1,16 +1,15 @@
 #include "../../includes/Server.hpp"
 
 Server::Server(int port, std::string password) : _port(port), _password(password), _fdsize(5) {
-    // _commandMap["KICK"]    = &Server::cmdKick;
-    // _commandMap["INVITE"]  = &Server::cmdInvite;
-    // _commandMap["TOPIC"]   = &Server::cmdTopic;
-    // _commandMap["MODE"]    = &Server::cmdMode;
-    // _commandMap["JOIN"]    = &Server::cmdJoin;
-    // _commandMap["PRIVMSG"] = &Server::cmdPrivmsg;
-    // _commandMap["NICK"]    = &Server::cmdNick;
-    // _commandMap["USER"]    = &Server::cmdUser;
-    // _commandMap["PART"]    = &Server::cmdPart;
-    // _commandMap["PASS"]    = &Server::cmdPass;
+	time_t now = time(0);
+    char *dt = ctime(&now); // ctime returns a string ending with \n
+    std::string timeStr(dt);
+    // Remove the newline that ctime adds at the end
+    if (!timeStr.empty() && timeStr[timeStr.length()-1] == '\n') {
+        timeStr.erase(timeStr.length()-1);
+    }
+    
+    this->_startTime = timeStr;
 }
 
 Server::~Server() {}
@@ -100,4 +99,10 @@ int Server::getListenerSocket() {
     }
 
     return fd;
+}
+
+
+std::string Server::getStartTime() const
+{
+	return (_startTime);
 }

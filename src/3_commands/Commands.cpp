@@ -1,30 +1,5 @@
 #include "../../includes/Server.hpp"
 
-void Server::addChannel(Channel* channel) { _channels.push_back(channel); }
-
-void Server::rmvChannel(Channel* channel) {
-    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
-        if ((*it) == channel) {
-            _channels.erase(it);
-            return;
-        }
-    }
-}
-
-// Returns a Channel from the vector given its name
-Channel* Server::getChannel(const std::string& name) {
-    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
-        if ((*it)->getName() == name) return (*it);
-    }
-    return (NULL);
-}
-
-User* Server::getUser(const std::string& name) {
-    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
-        if (it->second->getNick() == name) { return it->second; }
-    }
-    return NULL;
-}
 
 std::string intToString(int i) {
     std::stringstream ss;
@@ -39,6 +14,23 @@ int StringToInt(std::string str) {
     return (res);
 }
 
+std::string Server::getWelcomeMsg(User& user) {
+    std::string serverName = "ft_irc.42.fr";
+    std::string nick       = ((user.getNick().empty()) ? "*" : user.getNick());
+    std::string username   = user.getUsername();
+
+    std::string msg = ":" + serverName + " 001 " + nick +
+                      " :Welcome to the Internet Relay Network " + nick + "!" + username + "@" +
+                      user.getHostname() + "\r\n";
+    msg += ":" + serverName + " 002 " + nick + " :Your host is " + serverName +
+           ", running version 1.0\r\n";
+    msg += ":" + serverName + " 003 " + nick + " :This server was created " + this->getStartTime() +
+           "\r\n";
+    msg += ":" + serverName + " 004 " + nick + " " + serverName + " 1.0 o itkl\r\n";
+
+    return (msg);
+}
+
 void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
     // Build the Prefix: :ServerName <Code> <ClientNick> : <arg> /r/n
     // :BBCServer 404 Mike : blablabla\r\n
@@ -46,7 +38,7 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
     std::string user_nick = ((user.getNick().empty()) ? "*" : user.getNick());
     std::string msg       = ":ft_irc.42.fr " + intToString(id) + " " + user_nick + " ";
     switch (id) {
-        case RPL_WELCOME: msg += " :Welcome to our ft_irc " + user.getPrefix() + "\r\n"; break;
+        case RPL_WELCOME: msg = getWelcomeMsg(user); break;
         case RPL_NOTOPIC: msg += arg1 + " :No topic is set\r\n"; break;
         case RPL_TOPIC:
             // Arg1 = channel name, Arg2 = topic
@@ -86,12 +78,58 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
     send(user.getFd(), msg.c_str(), msg.length(), 0);
 }
 
+
+
+
+
+void Server::addChannel(Channel* channel) { _channels.push_back(channel); }
+
+void Server::rmvChannel(Channel* channel) {
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        if ((*it) == channel) {
+            _channels.erase(it);
+            return;
+        }
+    }
+}
+
+// Returns a Channel from the vector given its name
+Channel* Server::getChannel(const std::string& name) {
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        if ((*it)->getName() == name) return (*it);
+    }
+    return (NULL);
+}
+
+User* Server::getUser(const std::string& name) {
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        if (it->second->getNick() == name) { return it->second; }
+    }
+    return NULL;
+}
+
 void Server::executeCommand(User& user, const ParsedCommand& cmd) {
-    // switch (cmd.id) {
-    //     case KICK: cmdKick(user, cmd); break;
-    //     case INVITE: cmdInvite(user, cmd); break;
-    //     default: break;
-    // }
+    if (!user.isRegistered()) {
+        bool isLoginCmd = (cmd.id == PASS || cmd.id == NICK || cmd.id == USER);
+        if (!isLoginCmd) {
+            this->reply(ERR_NOTREGISTERED, user, "", "");
+            return;
+        }
+    }
+
+    switch (cmd.id) {
+        case KICK: cmdKick(user, cmd); break;
+        case INVITE: cmdInvite(user, cmd); break;
+        case TOPIC: cmdTopic(user, cmd); break;
+        case MODE: cmdMode(user, cmd); break;
+        case JOIN: cmdJoin(user, cmd); break;
+        case PRIVMSG: cmdPrivmsg(user, cmd); break;
+        case NICK: cmdNick(user, cmd); break;
+        case USER: cmdUser(user, cmd); break;
+        case PART: cmdPart(user, cmd); break;
+        case PASS: cmdPass(user, cmd); break;
+        default: this->reply(ERR_UNKNOWNCOMMAND, user, cmd.command, ""); break;
+    }
 }
 
 void Server::cmdKick(User& user, const ParsedCommand& cmd) {
@@ -263,7 +301,10 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
     // Check if channel exists and if user is already connected (in this case we
     // just ignore him)
     if (!(channel = this->getChannel(cmd.args[0]))) {
-        channel = new Channel(cmd.args[0]);
+        if (cmd.args[0][0] != '#')
+			channel = new Channel('#' + cmd.args[0]);
+		else
+			channel = new Channel(cmd.args[0]);
         this->addChannel(channel);
         channel->addUser(user);
         channel->addOperator(user);
@@ -342,11 +383,9 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
         if (user.isPassGiven()) {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
+        } else {
+            // DISCONNECT USER
         }
-		else
-		{
-			//DISCONNECT USER
-		}
         return;
     }
 
@@ -367,9 +406,13 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd) {
     user.setUsername(cmd.args[0]);
     user.setRealname(cmd.args[3]);
 
-    if (!user.getNick().empty() && user.isPassGiven()) {
-        user.setRegistered(true);
-        this->reply(RPL_WELCOME, user, "", "");
+    if (!user.getNick().empty()) {
+        if (user.isPassGiven()) {
+            user.setRegistered(true);
+            this->reply(RPL_WELCOME, user, "", "");
+        } else {
+            // DISCONNECT USER
+        }
     }
 }
 

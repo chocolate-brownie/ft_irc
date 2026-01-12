@@ -62,10 +62,7 @@ bool Server::handleClientData(int client_fd) {
         std::cout << std::endl;
         // --- END DEBUGGING PARSER OUTPUT ---
 
-        // TODO: team: Implement Server::executeCommand
-        // This function should dispatch the 'parsed' command to the appropriate
-        // handler (e.g., cmdNick, cmdJoin, etc.)
-        // executeCommand(*user, parsed);
+        executeCommand(*user, parsed);
     }
     return true; // They are alive keep i as it is
 }
