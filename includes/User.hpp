@@ -29,6 +29,7 @@ private:
     std::vector<Channel*> _channels;
 
     bool _isRegistered;
+    bool _passGiven;
 
     std::string _buffer;
 
@@ -55,9 +56,11 @@ public:
     std::string getRealname() const;
     std::string getPrefix() const;
     bool        isRegistered() const;
+    bool        isPassGiven() const;
 
     // SETTERS
     void setRegistered(bool val);
+    void setPassGiven(bool val);
     void setNick(const std::string& nick);
     void setUsername(const std::string& username);
     void setHostname(const std::string& host);

@@ -31,7 +31,6 @@ ParsedCommand Parser::parse(const std::string& input) {
         case PASS: IsValid_PASS(&pc); break;
 		default: break;
     }
-
     return pc;
 }
 

@@ -38,6 +38,7 @@
 #define ERR_NOTREGISTERED 451
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTRED 462
+#define ERR_PASSWDMISMATCH 464
 #define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
 #define ERR_INVITEONLYCHAN 473
@@ -52,6 +53,7 @@ class Server {
 private:
     int         _port;
     std::string _password;
+    std::string _startTime;
     int         _listener; // Listening socket descriptor
 
     const std::size_t          _fdsize; // max size of the room
@@ -62,10 +64,6 @@ private:
 
     Server(const Server& other);
     Server& operator=(const Server& other);
-
-    // Type definition for a pointer to a member function of the Server class
-    typedef void (Server::*CommandFunction)(User&, const ParsedCommand&);
-    std::map<std::string, CommandFunction> _commandMap;
 
     void reply(int id, User& user, std::string arg1, std::string arg2);
     // Main methods regarding to the network-engine
@@ -89,6 +87,7 @@ public:
 
     void start();
 
+    // bool tryRegister(User& user);
     void executeCommand(User& user, const ParsedCommand& cmd);
 
     void cmdKick(User& user, const ParsedCommand& cmd);
@@ -100,9 +99,14 @@ public:
     void cmdNick(User& user, const ParsedCommand& cmd);
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
+    void cmdPass(User& user, const ParsedCommand& cmd);
 
-    Channel* getChannel(const std::string& name);
-    User*    getUser(const std::string& name);
+    void        addChannel(Channel* channel);
+    void        rmvChannel(Channel* channel);
+    Channel*    getChannel(const std::string& name);
+    User*       getUser(const std::string& name);
+    std::string getStartTime() const;
+    std::string getWelcomeMsg(User& user);
 };
 
 #endif
