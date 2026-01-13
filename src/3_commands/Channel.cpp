@@ -127,7 +127,7 @@ int Channel::getLimit() const { return (_userlimit); }
 
 int Channel::getNumberUsers() const {
     int count = 0;
-    for (std::vector<User*>::const_iterator it = _invited.begin(); it != _invited.end(); it++)
+    for (std::vector<User*>::const_iterator it = _users.begin(); it != _users.end(); it++)
         count++;
     return (count);
 }

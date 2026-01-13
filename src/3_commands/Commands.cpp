@@ -174,7 +174,7 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd) {
         this->reply(ERR_NOSUCHNICK, user, cmd.args[1], "");
         return;
     }
-    if ((target = channel->isUserConnected(cmd.args[1]))) {
+    if ((channel->isUserConnected(*target))) {
         this->reply(ERR_USERONCHANNEL, user, cmd.args[1], "");
         return;
     }
@@ -270,10 +270,10 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
                 }
                 break;
             case 'o':
-                // if (arg_index >= cmd.args.size()) {
-                //     this->reply(ERR_NEEDMOREPARAMS, user, "MODE", "");
-                //     continue;
-                // }
+                if (arg_index >= (int) cmd.args.size()) {
+                    this->reply(ERR_NEEDMOREPARAMS, user, "MODE", "");
+                    continue;
+                }
                 User* target;
                 if (!(target = this->getUser(cmd.args[arg_index]))) {
                     this->reply(ERR_NOSUCHNICK, user, cmd.args[arg_index], "");
@@ -298,7 +298,7 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
             case 'l':
                 if (state) {
                     int limit = StringToInt(cmd.args[arg_index]);
-                    if (!limit || limit < 0) continue;
+                    if (limit <= 0) continue;
                     channel->setLimit(limit);
                     changes += "+l";
                     log += cmd.args[arg_index++] + " ";
@@ -313,7 +313,9 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
         std::string mode_msg = ":" + user.getPrefix() + " MODE " + channel->getName() + " " +
                                changes + " " + log + "\r\n";
         channel->broadcast(mode_msg);
-		std::cout << "" << std::endl;
+        std::cout << "[DEBUG] MODE t:" << channel->getTopicMode()
+                  << " i:" << channel->getInviteMode() << " k:" << channel->getKeyMode()
+                  << " l:" << channel->getLimitMode() << ": " << channel->getLimit() << std::endl;
     }
 }
 
@@ -330,7 +332,6 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
             channel = new Channel(cmd.args[0]);
 
         this->addChannel(channel);
-        // channel->addUser(user);
         channel->addOperator(user);
     } else {
         if (channel->isUserConnected(user)) return;
@@ -345,7 +346,8 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
         else if (channel->getKeyMode() && provided_key.compare(channel->getKey()) != 0) {
             this->reply(ERR_BADCHANNELKEY, user, channel->getName(), "");
             return;
-        } // When limit mode icmd.args[arg_index++s active we check if the channel isn't full
+        } // When limit mode is active we check if the channel isn't full
+		std::cout << "[DEBUG] number of users : " << channel->getNumberUsers() << " LIMIT:" << channel->getLimit() << std::endl;
         if (channel->getLimitMode() && channel->getNumberUsers() >= channel->getLimit()) {
             this->reply(ERR_CHANNELISFULL, user, channel->getName(), "");
             return;
