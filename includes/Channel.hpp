@@ -66,6 +66,7 @@ public:
     std::string getKey() const;
     std::string getTopic() const;
     int         getLimit() const;
+	int			getNumberUsers() const;
     bool        getKeyMode() const;
     bool        getInviteMode() const;
     bool        getTopicMode() const;
