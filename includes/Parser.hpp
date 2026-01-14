@@ -20,6 +20,7 @@
 #define USER 8
 #define PART 9
 #define PASS 10
+#define QUIT 11
 
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"

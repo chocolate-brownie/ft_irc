@@ -87,7 +87,6 @@ public:
 
     void start();
 
-    // bool tryRegister(User& user);
     void executeCommand(User& user, const ParsedCommand& cmd);
 
     void cmdKick(User& user, const ParsedCommand& cmd);
@@ -100,6 +99,7 @@ public:
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
     void cmdPass(User& user, const ParsedCommand& cmd);
+	void cmdQuit(User& user, const ParsedCommand& cmd);
 
     void        addChannel(Channel* channel);
     void        rmvChannel(Channel* channel);

@@ -125,30 +125,38 @@ void Channel::setTopic(std::string topic) { _topic = topic; }
 
 int Channel::getLimit() const { return (_userlimit); }
 
-void Channel::setLimit(int limit)
-{
-    _userlimit = limit;
+int Channel::getNumberUsers() const {
+    int count = 0;
+    for (std::vector<User*>::const_iterator it = _users.begin(); it != _users.end(); it++) count++;
+    return (count);
 }
 
-void Channel::setKeyMode(bool mode)
-{
-    _key_mode = mode;
+std::string Channel::getMode() const {
+    std::string msg = this->getName();
+    if (!this->getInviteMode() && !this->getKeyMode() && !this->getLimitMode() &&
+        !this->getTopicMode())
+        return (msg);
+    msg += " +";
+    if (this->getInviteMode()) msg += "i";
+    if (this->getKeyMode()) msg += "k";
+    if (this->getTopicMode()) msg += "t";
+    if (this->getLimitMode()) {
+        std::stringstream ss;
+        ss << this->getLimit();
+        msg += ("l " + ss.str());
+    }
+    return (msg);
 }
 
-void Channel::setLimitMode(bool mode)
-{
-    _limit_mode = mode;
-}
+void Channel::setLimit(int limit) { _userlimit = limit; }
 
-void Channel::setTopicMode(bool mode)
-{
-    _topic_mode = mode;
-}
+void Channel::setKeyMode(bool mode) { _key_mode = mode; }
 
-void Channel::setInviteMode(bool mode)
-{
-    _invite_mode = mode;
-}
+void Channel::setLimitMode(bool mode) { _limit_mode = mode; }
+
+void Channel::setTopicMode(bool mode) { _topic_mode = mode; }
+
+void Channel::setInviteMode(bool mode) { _invite_mode = mode; }
 
 bool Channel::getKeyMode() const { return (_key_mode); }
 
