@@ -315,8 +315,8 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
         channel->broadcast(mode_msg);
     } else {
         std::string msg = ":ft_irc.42.fr 324 " + user.getNick() + " " + channel->getMode() + "\r\n";
-		send(user.getFd(), msg.c_str(), msg.size(), 0);
-	}
+        send(user.getFd(), msg.c_str(), msg.size(), 0);
+    }
 }
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
@@ -343,12 +343,11 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
             }
             channel->removeInvited(user);
         } // When key mode is active we check if the given password matches
-        else if (channel->getKeyMode() && provided_key.compare(channel->getKey()) != 0) {
+        else if (channel->getKeyMode() && provided_key.compare(channel->getKey()) != 0 &&
+                 !channel->isInvited(user)) {
             this->reply(ERR_BADCHANNELKEY, user, channel->getName(), "");
             return;
         } // When limit mode is active we check if the channel isn't full
-        std::cout << "[DEBUG] number of users : " << channel->getNumberUsers()
-                  << " LIMIT:" << channel->getLimit() << std::endl;
         if (channel->getLimitMode() && channel->getNumberUsers() >= channel->getLimit()) {
             this->reply(ERR_CHANNELISFULL, user, channel->getName(), "");
             return;
@@ -382,8 +381,9 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd) {
             this->reply(ERR_CANNOTSENDTOCHAN, user, channel->getName(), "");
             return;
         }
-        msg = ":" + user.getPrefix() + " PRIVMSG #" + channel->getName() + " :" + cmd.args[1] +
-              "\r\n";
+        msg =
+            ":" + user.getPrefix() + " PRIVMSG " + channel->getName() + " :" + cmd.args[1] + "\r\n";
+
         channel->broadcast(user, msg);
         return;
     }
@@ -471,10 +471,10 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
 
 void Server::cmdPass(User& user, const ParsedCommand& cmd) {
     if (cmd.args[0].compare(_password) != 0) {
-		this->reply(ERR_PASSWDMISMATCH, user, "", "");
-		return;
-	}
-	user.setPassGiven(true);
+        this->reply(ERR_PASSWDMISMATCH, user, "", "");
+        return;
+    }
+    user.setPassGiven(true);
 }
 
 void Server::cmdQuit(User& user, const ParsedCommand& cmd) {

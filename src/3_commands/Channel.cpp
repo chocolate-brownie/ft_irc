@@ -94,6 +94,7 @@ bool Channel::isOperator(User& user) const {
 // INVITES
 
 void Channel::addInvited(User& user) { _invited.push_back(&user); }
+
 void Channel::removeInvited(User& user) {
     for (std::vector<User*>::iterator it = _invited.begin(); it != _invited.end(); it++) {
         if ((*it) == &user) {
