@@ -25,7 +25,7 @@ std::string Server::getWelcomeMsg(User& user) {
            ", running version 1.0\r\n";
     msg += ":" + serverName + " 003 " + nick + " :This server was created " + this->getStartTime() +
            "\r\n";
-    msg += ":" + serverName + " 004 " + nick + " " + serverName + " 1.0 o itkl\r\n";
+    msg += ":" + serverName + " 004 " + nick + " " + serverName + " 1.0 o iklt\r\n";
 
     return (msg);
 }
@@ -228,14 +228,14 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
         this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
         return;
     }
-    if (!channel->isOperator(user)) {
+    if (!channel->isOperator(user) && cmd.args.size() > 1) {
         this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
         return;
     }
 
     // state indicates whether we are adding a flag or removing it
     // arg_index points at the next argument out flags refer to
-    std::string flags     = cmd.args[1];
+    std::string flags     = (cmd.args.size() > 1) ? cmd.args[1] : "";
     std::string changes   = "";
     std::string log       = "";
     bool        state     = true;
@@ -313,10 +313,10 @@ void Server::cmdMode(User& user, const ParsedCommand& cmd) {
         std::string mode_msg = ":" + user.getPrefix() + " MODE " + channel->getName() + " " +
                                changes + " " + log + "\r\n";
         channel->broadcast(mode_msg);
-        std::cout << "[DEBUG] MODE t:" << channel->getTopicMode()
-                  << " i:" << channel->getInviteMode() << " k:" << channel->getKeyMode()
-                  << " l:" << channel->getLimitMode() << ": " << channel->getLimit() << std::endl;
-    }
+    } else {
+        std::string msg = ":ft_irc.42.fr 324 " + user.getNick() + " " + channel->getMode() + "\r\n";
+		send(user.getFd(), msg.c_str(), msg.size(), 0);
+	}
 }
 
 void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
@@ -347,7 +347,8 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
             this->reply(ERR_BADCHANNELKEY, user, channel->getName(), "");
             return;
         } // When limit mode is active we check if the channel isn't full
-		std::cout << "[DEBUG] number of users : " << channel->getNumberUsers() << " LIMIT:" << channel->getLimit() << std::endl;
+        std::cout << "[DEBUG] number of users : " << channel->getNumberUsers()
+                  << " LIMIT:" << channel->getLimit() << std::endl;
         if (channel->getLimitMode() && channel->getNumberUsers() >= channel->getLimit()) {
             this->reply(ERR_CHANNELISFULL, user, channel->getName(), "");
             return;
@@ -469,7 +470,10 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdPass(User& user, const ParsedCommand& cmd) {
-    if (cmd.args[0].compare(_password) != 0) this->reply(ERR_PASSWDMISMATCH, user, "", "");
+    if (cmd.args[0].compare(_password) != 0) {
+        this->reply(ERR_PASSWDMISMATCH, user, "", "");
+        return;
+    }
     user.setPassGiven(true);
 }
 

@@ -127,9 +127,25 @@ int Channel::getLimit() const { return (_userlimit); }
 
 int Channel::getNumberUsers() const {
     int count = 0;
-    for (std::vector<User*>::const_iterator it = _users.begin(); it != _users.end(); it++)
-        count++;
+    for (std::vector<User*>::const_iterator it = _users.begin(); it != _users.end(); it++) count++;
     return (count);
+}
+
+std::string Channel::getMode() const {
+    std::string msg = this->getName();
+    if (!this->getInviteMode() && !this->getKeyMode() && !this->getLimitMode() &&
+        !this->getTopicMode())
+        return (msg);
+    msg += " +";
+    if (this->getInviteMode()) msg += "i";
+    if (this->getKeyMode()) msg += "k";
+    if (this->getTopicMode()) msg += "t";
+    if (this->getLimitMode()) {
+        std::stringstream ss;
+        ss << this->getLimit();
+        msg += ("l " + ss.str());
+    }
+    return (msg);
 }
 
 void Channel::setLimit(int limit) { _userlimit = limit; }
