@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cctype>
 
 #define ERR_UNKNOWNCOMMAND 421
 #define ERR_NEEDMOREPARAMS 461
