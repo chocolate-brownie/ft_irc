@@ -8,6 +8,7 @@
 
 #define ERR_UNKNOWNCOMMAND 421
 #define ERR_NEEDMOREPARAMS 461
+#define ERR_UNKNOWNMODE 472
 
 #define KICK 1
 #define INVITE 2

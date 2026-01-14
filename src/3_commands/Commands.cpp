@@ -471,10 +471,10 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
 
 void Server::cmdPass(User& user, const ParsedCommand& cmd) {
     if (cmd.args[0].compare(_password) != 0) {
-        this->reply(ERR_PASSWDMISMATCH, user, "", "");
-        return;
-    }
-    user.setPassGiven(true);
+		this->reply(ERR_PASSWDMISMATCH, user, "", "");
+		return;
+	}
+	user.setPassGiven(true);
 }
 
 void Server::cmdQuit(User& user, const ParsedCommand& cmd) {

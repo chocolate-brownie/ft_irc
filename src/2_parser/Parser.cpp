@@ -94,9 +94,6 @@ void IsValid_TOPIC(ParsedCommand* pc) {
     // number of parameters (1 or 2)
     if (pc->args.size() < 1)
         { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // // 1st param must be channel
-    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for a topic");
     // test for printability if there is topic's text
     if (pc->args.size() == 2) {
         for (size_t i = 0; i < pc->args[1].size(); i++) {
@@ -125,12 +122,6 @@ void IsValid_KICK(ParsedCommand* pc) {
     // number of parameters (2 or 3)
     if (pc->args.size() < 2)
         { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // // 1st param must be channel
-    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for a kick");
-    // // 2nd param must be user
-    // if (!pc->args[1].empty() && pc->args[1][0] == '#')
-    //     throw std::invalid_argument("Wrong user for a kick");
     // test for printability if there is comment text for kick
     if (pc->args.size() == 3) {
         for (size_t i = 0; i < pc->args[2].size(); i++) {
@@ -146,12 +137,6 @@ void IsValid_INVITE(ParsedCommand* pc) {
     // number of parameters (2)
     if (pc->args.size() < 2)
         { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // 1st param must be nickname
-    // if (!pc->args[0].empty() && pc->args[0][0] == '#')
-    //     throw std::invalid_argument("Wrong user for an invite");
-    // // 2nd param must be channel
-    // if (pc->args[1].size() < 2 || pc->args[1][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for an invite");
 }
 
 // Validates joining a channel command
@@ -160,9 +145,6 @@ void IsValid_JOIN(ParsedCommand* pc) {
     // number of parameters (1/2)
     if (pc->args.size() < 1)
         { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // // 1st param must be channel
-    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for a join");
 }
 
 // Validates setting or changing a nickname command
@@ -195,43 +177,45 @@ void IsValid_MODE(ParsedCommand* pc) {
     // number of parameters (2/3)
     if (pc->args.size() < 2)
         { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // // 1st param must be channel
-    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for MODE");
-    // 1st param must be composed of +/- and mode flag
-    const std::string& modeStr = pc->args[1];
-    if (modeStr.size() != 2) { pc->err = ERR_UNKNOWNCOMMAND; return; };
-    char sign = modeStr[0];
-    char mode = modeStr[1];
-    if (sign != '+' && sign != '-') { pc->err = ERR_UNKNOWNCOMMAND; return; };
-    // mode flag can be only i/t/k/o/l
-    if (mode != 'i' && mode != 't' && mode != 'k' && mode != 'o' && mode != 'l')
-        { pc->err = ERR_UNKNOWNCOMMAND; return; };
-    // modes without parameters
-    if (mode == 'i' || mode == 't') {
-        if (pc->args.size() != 2) { pc->err = ERR_UNKNOWNCOMMAND; return; };
-        return;
-    }
-    // modes with parameters only on '+'
-    if (sign == '-') {
-        if (pc->args.size() != 2)
-            { pc->err = ERR_UNKNOWNCOMMAND; return; };
-        return;
-    }
-    // +k +o +l → parameter required
-    if (pc->args.size() != 3) { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // param check for k/o/l
-    const std::string& param = pc->args[2];
-    if (mode == 'k') {
-        if (param.empty()) { pc->err = ERR_UNKNOWNCOMMAND; return; };
-    } else if (mode == 'o') {
-        if (param.empty() || param[0] == '#')
-            { pc->err = ERR_UNKNOWNCOMMAND; return; };
-    } else if (mode == 'l') {
-        for (size_t i = 0; i < param.size(); ++i) {
-            if (!std::isdigit(static_cast<unsigned char>(param[i])))
-                { pc->err = ERR_UNKNOWNCOMMAND; return; };
+
+    const std::string& modes = pc->args[1];
+	bool state = true;
+    int  needed_args = 0;
+    bool has_sign = false;
+
+    for (size_t i = 0; i < modes.size(); ++i) {
+        char c = modes[i];
+
+        if (c == '+') {
+            state = true;
+            has_sign = true;
         }
+        else if (c == '-') {
+            state = false;
+            has_sign = true;
+        }
+        else {
+            if (!has_sign) {
+                pc->err = ERR_UNKNOWNMODE;
+                return;
+            }
+            switch (c) {
+                case 'i':
+                case 't': break; // no arguments
+                case 'k':
+                case 'l': { if (state) needed_args++; break; }
+                case 'o': { needed_args++; break; }
+                default: { pc->err = ERR_UNKNOWNMODE; return; }
+            }
+        }
+    }
+
+	// Number of provided parameters after <modes>
+    int provided_args = pc->args.size() - 2;
+
+    if (provided_args < needed_args) {
+        pc->err = ERR_NEEDMOREPARAMS;
+        return;
     }
 }
 
@@ -268,9 +252,6 @@ void IsValid_USER(ParsedCommand* pc) {
 void IsValid_PART(ParsedCommand* pc) {
     // number of parameters (1)
     if (pc->args.size() < 1) { pc->err = ERR_NEEDMOREPARAMS; return; }
-    // // param must be channel
-    // if (pc->args[0].size() < 2 || pc->args[0][0] != '#')
-    //     throw std::invalid_argument("Wrong channel for PART");
 }
 
 // Validates password
