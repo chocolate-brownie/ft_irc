@@ -166,23 +166,23 @@ void Server::cmdInvite(User& user, const ParsedCommand& cmd) {
     // not already in the channel, then
     // IF INVITE MODE TRUE and USER IS NOT OPERATOR
     // we send the error otherwise we invite the target
-    if (!(channel = this->getChannel(cmd.args[0]))) {
-        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[0], "");
+    if (!(channel = this->getChannel(cmd.args[1]))) {
+        this->reply(ERR_NOSUCHCHANNEL, user, cmd.args[1], "");
         return;
     }
-    if (!(target = this->getUser(cmd.args[1]))) {
-        this->reply(ERR_NOSUCHNICK, user, cmd.args[1], "");
+    if (!(target = this->getUser(cmd.args[0]))) {
+        this->reply(ERR_NOSUCHNICK, user, cmd.args[0], "");
         return;
     }
     if ((channel->isUserConnected(*target))) {
-        this->reply(ERR_USERONCHANNEL, user, cmd.args[1], "");
+        this->reply(ERR_USERONCHANNEL, user, cmd.args[0], "");
         return;
     }
     if (!(channel->isUserConnected(user.getNick()))) {
         this->reply(ERR_NOTONCHANNEL, user, channel->getName(), "");
         return;
     }
-    if (!channel->getInviteMode() && !(channel->isOperator(user))) {
+    if (channel->getInviteMode() && !(channel->isOperator(user))) {
         this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
         return;
     }
