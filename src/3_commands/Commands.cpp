@@ -327,13 +327,12 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
     std::string reply;
     std::string provided_key = (cmd.args.size() > 1) ? cmd.args[1] : "";
 
+    std::string channelName = cmd.args[0];
+    if (channelName[0] != '#') { channelName = "#" + channelName; }
     // Check if channel exists and if user is already connected (in this case we
     // just ignore him)
     if (!(channel = this->getChannel(cmd.args[0]))) {
-        if (cmd.args[0][0] != '#') channel = new Channel('#' + cmd.args[0]);
-        else
-            channel = new Channel(cmd.args[0]);
-
+        channel = new Channel(channelName);
         this->addChannel(channel);
         channel->addOperator(user);
     } else {
@@ -499,13 +498,13 @@ void Server::cmdPass(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdQuit(User& user, const ParsedCommand& cmd) {
-	std::string reason   = cmd.args.empty() ? "Client Quit" : cmd.args[0];
+    std::string reason   = cmd.args.empty() ? "Client Quit" : cmd.args[0];
     std::string quit_msg = ":" + user.getPrefix() + " QUIT :" + reason + "\r\n";
 
     std::vector<Channel*> channels = user.getChannels();
     for (size_t i = 0; i < channels.size(); i++) { channels[i]->broadcast(user, quit_msg); }
 
-	user.quitAllChannels();
+    user.quitAllChannels();
 
     _clients_to_disconnect.push_back(user.getFd());
 }
