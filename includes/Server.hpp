@@ -32,6 +32,7 @@
 #define ERR_CANNOTSENDTOCHAN 404
 #define ERR_UNKNOWNCOMMAND 421
 #define ERR_NICKNAMEINUSE 433
+#define ERR_NONICKNAMEGIVEN 431
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_USERONCHANNEL 443
@@ -58,6 +59,7 @@ private:
 
     const std::size_t          _fdsize; // max size of the room
     std::vector<struct pollfd> _pfds;   // room for the connections
+    std::vector<int>           _clients_to_disconnect;
 
     std::vector<Channel*> _channels;
     std::map<int, User*>  _users;
@@ -72,7 +74,7 @@ private:
 
     void processConnections();
     void handleNewConnection();
-    bool handleClientData(int client_fd);
+    void handleClientData(int client_fd);
     void addToTheRoom(int fd, struct sockaddr_storage* remoteadd);
     void removeFromTheRoom(int fd);
 
@@ -99,7 +101,7 @@ public:
     void cmdUser(User& user, const ParsedCommand& cmd);
     void cmdPart(User& user, const ParsedCommand& cmd);
     void cmdPass(User& user, const ParsedCommand& cmd);
-	void cmdQuit(User& user, const ParsedCommand& cmd);
+    void cmdQuit(User& user, const ParsedCommand& cmd);
 
     void        addChannel(Channel* channel);
     void        rmvChannel(Channel* channel);

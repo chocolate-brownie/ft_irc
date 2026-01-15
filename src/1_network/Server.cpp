@@ -1,14 +1,14 @@
 #include "../../includes/Server.hpp"
 
 Server::Server(int port, std::string password) : _port(port), _password(password), _fdsize(5) {
-	time_t now = time(0);
-    char *dt = ctime(&now); // ctime returns a string ending with \n
+    time_t      now = time(0);
+    char*       dt  = ctime(&now); // ctime returns a string ending with \n
     std::string timeStr(dt);
     // Remove the newline that ctime adds at the end
-    if (!timeStr.empty() && timeStr[timeStr.length()-1] == '\n') {
-        timeStr.erase(timeStr.length()-1);
+    if (!timeStr.empty() && timeStr[timeStr.length() - 1] == '\n') {
+        timeStr.erase(timeStr.length() - 1);
     }
-    
+
     this->_startTime = timeStr;
 }
 
@@ -35,11 +35,8 @@ void Server::start() {
             std::cerr << "poll" << std::endl;
             exit(1);
         }
-
         processConnections();
     }
-
-    // disconnectTheSocket();
 }
 
 struct addrinfo* Server::getAddressInfo() {
@@ -101,8 +98,4 @@ int Server::getListenerSocket() {
     return fd;
 }
 
-
-std::string Server::getStartTime() const
-{
-	return (_startTime);
-}
+std::string Server::getStartTime() const { return (_startTime); }
