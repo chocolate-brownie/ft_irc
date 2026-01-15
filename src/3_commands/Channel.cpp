@@ -52,15 +52,6 @@ User* Channel::isUserConnected(const std::string& nick) const {
 
 void Channel::addUser(User& user) { _users.push_back(&user); }
 
-// void Channel::removeUser(User& user) {
-//     for (std::vector<User*>::iterator it = _users.begin(); it != _users.end(); it++) {
-//         if ((*it) == &user) {
-//             _users.erase(it);
-//             return;
-//         }
-//     }
-// }
-
 void Channel::removeUser(User& user) {
     for (std::vector<User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
         if ((*it)->getNick() == user.getNick()) {
