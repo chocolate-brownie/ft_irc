@@ -150,7 +150,7 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd) {
     // When kicking user we remove him from the channel list and vice versa we
     // remove the channel from his list, and broadcast the message to inform the
     // channel
-    reply = user.getPrefix() + " KICK " + channel->getName() + " " + target->getNick() +
+    reply = ":" + user.getPrefix() + " KICK " + channel->getName() + " " + target->getNick() +
             " : Kicked by operator\r\n";
     channel->broadcast(reply);
     channel->removeUser(*target);
