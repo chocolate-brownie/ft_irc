@@ -73,7 +73,7 @@ ParsedCommand Parser::split(const std::string& input) {
 // Validates command name
 void IsValidCmd(ParsedCommand* pc) {
     std::string cmds_list[] = {
-        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS"
+        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS", "CAP"
     };
 
     size_t i;
