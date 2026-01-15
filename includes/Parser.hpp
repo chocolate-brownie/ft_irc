@@ -22,6 +22,7 @@
 #define PART 9
 #define PASS 10
 #define QUIT 11
+#define CAP 12
 
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"
@@ -41,6 +42,7 @@ void IsValid_MODE(ParsedCommand* pc);
 void IsValid_USER(ParsedCommand* pc);
 void IsValid_PART(ParsedCommand* pc);
 void IsValid_PASS(ParsedCommand* pc);
+void IsValid_QUIT(ParsedCommand *pc);
 
 class Parser {
 private:
