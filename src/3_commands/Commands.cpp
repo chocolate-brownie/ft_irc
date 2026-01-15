@@ -401,9 +401,16 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdNick(User& user, const ParsedCommand& cmd) {
-    // We check if the new nickname is already in use
+    // ADDITION 1: Prevent crash on empty NICK command
+    if (cmd.args.empty() || cmd.args[0].empty()) {
+        this->reply(ERR_NONICKNAMEGIVEN, user, "", "");
+        return;
+    }
+
     if (this->getUser(cmd.args[0])) {
         this->reply(ERR_NICKNAMEINUSE, user, cmd.args[0], "");
+        // ADDITION 2: Disconnect unregistered users on collision
+        if (!user.isRegistered()) { _clients_to_disconnect.push_back(user.getFd()); }
         return;
     }
 
@@ -415,7 +422,7 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
         } else {
-            // DISCONNECT USER
+            _clients_to_disconnect.push_back(user.getFd());
         }
         return;
     }
@@ -426,14 +433,21 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdUser(User& user, const ParsedCommand& cmd) {
+    // --- START OF MINIMAL ADDITION ---
+    // The USER command requires 4 arguments.
+    if (cmd.args.size() < 4) {
+        this->reply(ERR_NEEDMOREPARAMS, user, cmd.command, "");
+        // Disconnect an unregistered user for malformed commands.
+        if (!user.isRegistered()) { _clients_to_disconnect.push_back(user.getFd()); }
+        return;
+    }
+    // ---  END OF MINIMAL ADDITION  ---
+
     if (user.isRegistered()) {
         this->reply(ERR_ALREADYREGISTRED, user, "", "");
         return;
     }
 
-    // USER <username> <hostname> <servername> <realname>
-    // we ignore hostname since anyone could lie about it and we already can see
-    // the ip from accept() and we ignore servername because we know our name
     user.setUsername(cmd.args[0]);
     user.setRealname(cmd.args[3]);
 
@@ -442,7 +456,7 @@ void Server::cmdUser(User& user, const ParsedCommand& cmd) {
             user.setRegistered(true);
             this->reply(RPL_WELCOME, user, "", "");
         } else {
-            // DISCONNECT USER
+            _clients_to_disconnect.push_back(user.getFd());
         }
     }
 }
@@ -485,7 +499,11 @@ void Server::cmdPass(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdQuit(User& user, const ParsedCommand& cmd) {
-    (void) user;
-    (void) cmd;
-    // DISCONNECT USER
+    std::string reason   = cmd.args.empty() ? "Client Quit" : cmd.args[0];
+    std::string quit_msg = ":" + user.getPrefix() + " QUIT :" + reason + "\r\n";
+
+    std::vector<Channel*> channels = user.getChannels();
+    for (size_t i = 0; i < channels.size(); i++) { channels[i]->broadcast(user, quit_msg); }
+
+    _clients_to_disconnect.push_back(user.getFd());
 }

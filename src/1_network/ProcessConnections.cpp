@@ -26,7 +26,7 @@ void Server::handleNewConnection() {
     }
 }
 
-bool Server::handleClientData(int client_fd) {
+void Server::handleClientData(int client_fd) {
     char buf[256];
     int  nbytes = recv(client_fd, buf, sizeof(buf), 0);
 
@@ -37,8 +37,8 @@ bool Server::handleClientData(int client_fd) {
         else
             perror("recv");
 
-        removeFromTheRoom(client_fd); // remove the dead connection from the room
-        return false;
+        _clients_to_disconnect.push_back(client_fd);
+        return;
     }
 
     // 3. PROCESS (Success)
@@ -55,11 +55,10 @@ bool Server::handleClientData(int client_fd) {
         if (parsed.err) {
             if (parsed.err == ERR_UNKNOWNMODE) {
                 reply(parsed.err, *user, parsed.args[1], "");
-                return true;
             } else {
                 reply(parsed.err, *user, "", "");
-                return true;
             }
+            continue;
         }
 
         // --- DEBUGGING PARSER OUTPUT ---
@@ -73,7 +72,6 @@ bool Server::handleClientData(int client_fd) {
 
         executeCommand(*user, parsed);
     }
-    return true; // They are alive keep i as it is
 }
 
 void Server::processConnections() {
@@ -90,6 +88,12 @@ void Server::processConnections() {
 
         /* If the connection is not coming through the main door aka _listener its an already
          * existing client trying to communicate, so deal with him */
-        if (!handleClientData(current.fd)) i--;
+        handleClientData(current.fd);
     }
+
+    /* Process the disconnections AFTER the event loop */
+    for (size_t i = 0; i < _clients_to_disconnect.size(); ++i) {
+        removeFromTheRoom(_clients_to_disconnect[i]);
+    }
+    _clients_to_disconnect.clear();
 }

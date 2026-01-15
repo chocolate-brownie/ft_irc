@@ -29,6 +29,8 @@ ParsedCommand Parser::parse(const std::string& input) {
         case USER: IsValid_USER(&pc); break;
         case PART: IsValid_PART(&pc); break;
         case PASS: IsValid_PASS(&pc); break;
+		case QUIT: IsValid_QUIT(&pc); break;
+		case CAP: break;
 		default: break;
     }
     return pc;
@@ -73,7 +75,7 @@ ParsedCommand Parser::split(const std::string& input) {
 // Validates command name
 void IsValidCmd(ParsedCommand* pc) {
     std::string cmds_list[] = {
-        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS", "CAP"
+        "KICK", "INVITE", "TOPIC", "MODE", "JOIN", "PRIVMSG", "NICK", "USER", "PART", "PASS", "QUIT", "CAP"
     };
 
     size_t i;
@@ -86,6 +88,20 @@ void IsValidCmd(ParsedCommand* pc) {
     //throw std::invalid_argument("Unknown command name");
 	pc->err = ERR_UNKNOWNCOMMAND;
 	pc->cmd = -1;
+}
+
+// Validates ending a client session
+// QUIT [<Quit message>]
+void IsValid_QUIT(ParsedCommand *pc) {
+	if (pc->args.size() > 0) {
+		for (unsigned long i = 0; i <  pc->args.size(); i++) {
+			for (size_t i = 0; i < pc->args[1].size(); i++) {
+            	if (!std::isprint(static_cast<unsigned char>(pc->args[1][i])))
+                	{ pc->err = ERR_UNKNOWNCOMMAND; return; };
+        	    }
+		}
+	}
+	return;
 }
 
 // Validates topic setting in a channel command
@@ -174,6 +190,12 @@ void IsValid_NICK(ParsedCommand* pc) {
 // Validates channel mode change command
 // MODE <channel> {[+|-]|i|t|k|o|l} [<limit>/<password>/<user>]
 void IsValid_MODE(ParsedCommand* pc) {
+	// MODE irkalini_ +i while starting irssi
+	if (pc->args.size() == 2 && pc->args[1] == "+i")
+		return;
+	// MODE #42 to show the mode of the channel
+	if (pc->args.size() == 1 && pc->args[0][0] == '#')
+		return;
     // number of parameters (2/3)
     if (pc->args.size() < 2)
         { pc->err = ERR_NEEDMOREPARAMS; return; }

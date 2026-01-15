@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cctype>
 
 #define ERR_UNKNOWNCOMMAND 421
 #define ERR_NEEDMOREPARAMS 461
@@ -41,6 +42,7 @@ void IsValid_MODE(ParsedCommand* pc);
 void IsValid_USER(ParsedCommand* pc);
 void IsValid_PART(ParsedCommand* pc);
 void IsValid_PASS(ParsedCommand* pc);
+void IsValid_QUIT(ParsedCommand *pc);
 
 class Parser {
 private:
