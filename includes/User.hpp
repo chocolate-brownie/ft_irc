@@ -42,6 +42,7 @@ public:
     // CHANNELS RELATED
     void                  addChannel(Channel& channel);
     void                  removeChannel(Channel& channel);
+    void                  quitAllChannels();
     std::vector<Channel*> getChannels();
 
     void        appendBuffer(const std::string& data);

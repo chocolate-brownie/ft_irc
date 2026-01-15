@@ -4,7 +4,8 @@
 
 // FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
 // BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
-User::User(int fd) : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false), _passGiven(false) {}
+User::User(int fd)
+    : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false), _passGiven(false) {}
 
 User::~User() {
     close(_userSocketFd);
@@ -25,6 +26,13 @@ void User::removeChannel(Channel& channel) {
             return;
         }
     }
+}
+
+void User::quitAllChannels() {
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        (*it)->removeUser(*this);
+    }
+    _channels.clear();
 }
 
 std::vector<Channel*> User::getChannels() { return (_channels); }

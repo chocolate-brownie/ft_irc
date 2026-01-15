@@ -499,11 +499,13 @@ void Server::cmdPass(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdQuit(User& user, const ParsedCommand& cmd) {
-    std::string reason   = cmd.args.empty() ? "Client Quit" : cmd.args[0];
+	std::string reason   = cmd.args.empty() ? "Client Quit" : cmd.args[0];
     std::string quit_msg = ":" + user.getPrefix() + " QUIT :" + reason + "\r\n";
 
     std::vector<Channel*> channels = user.getChannels();
     for (size_t i = 0; i < channels.size(); i++) { channels[i]->broadcast(user, quit_msg); }
+
+	user.quitAllChannels();
 
     _clients_to_disconnect.push_back(user.getFd());
 }
