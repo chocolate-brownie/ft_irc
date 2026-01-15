@@ -21,12 +21,13 @@
 #define PART 9
 #define PASS 10
 #define QUIT 11
+#define CAP 12
 
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"
     std::vector<std::string> args;    // e.g., {"#42", "mypassword"}
-	int                      cmd;     // command code
-	int                      err;      // 0 if correct, ERR num if not
+    int                      cmd;     // command code
+    int                      err;     // 0 if correct, ERR num if not
 };
 
 void IsValidCmd(ParsedCommand* pc);

@@ -124,6 +124,7 @@ void Server::executeCommand(User& user, const ParsedCommand& cmd) {
         case PART: cmdPart(user, cmd); break;
         case PASS: cmdPass(user, cmd); break;
         case QUIT: cmdQuit(user, cmd); break;
+        case CAP: return;
         default: this->reply(ERR_UNKNOWNCOMMAND, user, cmd.command, ""); break;
     }
 }
@@ -132,6 +133,7 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd) {
     Channel*    channel;
     User*       target;
     std::string reply;
+    std::string reason = (cmd.args.size() > 2) ? cmd.args[2] : "Kicked by operator";
 
     // Checks if channel exists, if user is operator and if the target user is
     // in the channel
@@ -150,8 +152,9 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd) {
     // When kicking user we remove him from the channel list and vice versa we
     // remove the channel from his list, and broadcast the message to inform the
     // channel
+
     reply = ":" + user.getPrefix() + " KICK " + channel->getName() + " " + target->getNick() +
-            " : Kicked by operator\r\n";
+            " :" + reason + "\r\n";
     channel->broadcast(reply);
     channel->removeUser(*target);
     target->removeChannel(*channel);
@@ -470,6 +473,10 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdPass(User& user, const ParsedCommand& cmd) {
+    if (user.isRegistered()) {
+        this->reply(ERR_ALREADYREGISTRED, user, "", "");
+        return;
+    }
     if (cmd.args[0].compare(_password) != 0) {
         this->reply(ERR_PASSWDMISMATCH, user, "", "");
         return;
