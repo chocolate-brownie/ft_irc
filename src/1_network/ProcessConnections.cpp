@@ -48,28 +48,27 @@ void Server::handleClientData(int client_fd) {
     while (user->hasCompleteMessage()) {
         std::string command = user->extractMessage();
 
-        // std::cout << "HANDING OFF TO PARSER: \"" << command << "\" from User " << user->getFd()
-        //           << std::endl;
+        std::cout << "HANDING OFF TO PARSER: \"" << command << "\" from User " << user->getFd()
+                  << std::endl;
 
         ParsedCommand parsed = Parser::parse(command);
         if (parsed.err) {
             if (parsed.err == ERR_UNKNOWNMODE && parsed.args.size() > 1) {
                 reply(parsed.err, *user, parsed.args[1], "");
-            } 
-            else {
+            } else {
                 reply(parsed.err, *user, parsed.command, "");
             }
-			// std::cout << "[DEBUG] parsed found error: " << parsed.err << std::endl;
+            // std::cout << "[DEBUG] parsed found error: " << parsed.err << std::endl;
             continue;
         }
 
         // --- DEBUGGING PARSER OUTPUT ---
-        // std::cout << "DEBUG: Parsed Command Name: '" << parsed.command << "'" << std::endl;
-        // std::cout << "DEBUG: Parsed Command Args (" << parsed.args.size() << "):";
-        // for (size_t i = 0; i < parsed.args.size(); ++i) {
-        //     std::cout << " '" << parsed.args[i] << "'";
-        // }
-        // std::cout << std::endl;
+        std::cout << "DEBUG: Parsed Command Name: '" << parsed.command << "'" << std::endl;
+        std::cout << "DEBUG: Parsed Command Args (" << parsed.args.size() << "):";
+        for (size_t i = 0; i < parsed.args.size(); ++i) {
+            std::cout << " '" << parsed.args[i] << "'";
+        }
+        std::cout << std::endl;
         // --- END DEBUGGING PARSER OUTPUT ---
 
         executeCommand(*user, parsed);

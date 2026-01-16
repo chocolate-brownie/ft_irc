@@ -336,7 +336,7 @@ void Server::cmdJoin(User& user, const ParsedCommand& cmd) {
     if (channelName[0] != '#') { channelName = "#" + channelName; }
     // Check if channel exists and if user is already connected (in this case we
     // just ignore him)
-    if (!(channel = this->getChannel(cmd.args[0]))) {
+    if (!(channel = this->getChannel(channelName))) {
         channel = new Channel(channelName);
         this->addChannel(channel);
         channel->addOperator(user);
