@@ -76,10 +76,6 @@ ParsedCommand Parser::split(const std::string& input) {
             std::string rest;
             std::getline(ss, rest); // reads everything remaining
             trailing += rest;
-            // if (trailing.empty()) {
-            //     pc.err = ERR_NEEDMOREPARAMS;
-            //     return pc;
-            // } // Empty trailing parameter
             pc.args.push_back(trailing);
             return pc;
         }
@@ -115,7 +111,7 @@ void IsValidCmd(ParsedCommand* pc) {
             return;
         }
     }
-    // throw std::invalid_argument("Unknown command name");
+
     pc->err = ERR_UNKNOWNCOMMAND;
     pc->cmd = -1;
 }
@@ -123,6 +119,7 @@ void IsValidCmd(ParsedCommand* pc) {
 // Validates ending a client session
 // QUIT [<Quit message>]
 void IsValid_QUIT(ParsedCommand* pc) {
+    // test for printability
     for (size_t i = 0; i < pc->args.size(); i++) {
         for (size_t j = 0; j < pc->args[i].size(); j++) {
             if (!std::isprint(static_cast<unsigned char>(pc->args[i][j]))) {
@@ -142,7 +139,7 @@ void IsValid_TOPIC(ParsedCommand* pc) {
         return;
     }
     // test for printability if there is topic's text
-    if (pc->args.size() == 2) {
+    if (pc->args.size() >= 2) {
         for (size_t i = 0; i < pc->args[1].size(); i++) {
             if (!std::isprint(static_cast<unsigned char>(pc->args[1][i]))) {
                 pc->err = ERR_UNKNOWNCOMMAND;
@@ -153,7 +150,7 @@ void IsValid_TOPIC(ParsedCommand* pc) {
 }
 
 // Validates sending a private or channel message command
-// PRIVMSG <receiver>{,<receiver>} <text to be sent>
+// PRIVMSG <receiver> <text to be sent>
 void IsValid_PRIVMSG(ParsedCommand* pc) {
     // number of parameters (2)
     if (pc->args.size() < 2) {
@@ -245,7 +242,7 @@ void IsValid_NICK(ParsedCommand* pc) {
 void IsValid_MODE(ParsedCommand* pc) {
     // MODE irkalini_ +i while starting irssi
     if (pc->args.size() == 2 && pc->args[1] == "+i") return;
-    // MODE #42 to show the mode of the channel
+    // MODE #channel to show the mode of the channel
     if (pc->args.size() == 1 && pc->args[0][0] == '#') return;
     // number of parameters (2/3)
     if (pc->args.size() < 2) {

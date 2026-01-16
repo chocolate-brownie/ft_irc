@@ -216,7 +216,7 @@ void Server::cmdTopic(User& user, const ParsedCommand& cmd) {
         else
             this->reply(RPL_TOPIC, user, channel->getName(), channel->getTopic());
         return;
-    } // IF IRINA CHECKS ALREADY I CAN TAKE OUT THE ELSE IF
+    }
     else if (cmd.args.size() == 2) {
         if (channel->getTopicMode() && !channel->isOperator(user)) {
             this->reply(ERR_CHANOPRIVSNEEDED, user, channel->getName(), "");
