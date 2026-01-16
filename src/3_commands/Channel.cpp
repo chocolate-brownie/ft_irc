@@ -59,7 +59,15 @@ void Channel::removeUser(User& user) {
             break;
         }
     }
-    removeOperator(user);
+    if (isOperator(user)) removeOperator(user);
+
+    // if the user we removed was the last operator we promote the oldest user to operator
+    if (!_users.empty() && _operators.empty()) {
+        User* newOp = _users[0];
+        _operators.push_back(newOp);
+        std::string msg = ":irc.server.com MODE " + _name + " +o " + newOp->getNick() + "\r\n";
+        broadcast(msg);
+    }
 }
 
 std::string Channel::getUserList() const {
