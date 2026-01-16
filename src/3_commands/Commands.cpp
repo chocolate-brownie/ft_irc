@@ -52,6 +52,7 @@ void Server::reply(int id, User& user, std::string arg1, std::string arg2) {
             msg += "= " + arg1 + " :" + arg2 + "\r\n";
             break;
         case RPL_ENDOFNAMES: msg += arg1 + " :End of /NAMES list\r\n"; break;
+        case ERR_NOORIGIN: msg += ":No origin specified\r\n"; break;
         case ERR_NOSUCHNICK: msg += arg1 + " :No such nick/channel\r\n"; break;
         case ERR_NOSUCHCHANNEL: msg += arg1 + " :No such channel\r\n"; break;
         case ERR_CANNOTSENDTOCHAN: msg += arg1 + " :Cannot send to channel\r\n"; break;
@@ -82,6 +83,7 @@ void Server::addChannel(Channel* channel) { _channels.push_back(channel); }
 void Server::rmvChannel(Channel* channel) {
     for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
         if ((*it) == channel) {
+            delete *it;
             _channels.erase(it);
             return;
         }
@@ -125,6 +127,8 @@ void Server::executeCommand(User& user, const ParsedCommand& cmd) {
         case PASS: cmdPass(user, cmd); break;
         case QUIT: cmdQuit(user, cmd); break;
         case CAP: return;
+        case WHO: cmdWho(user, cmd); break;
+        case PING: cmdPing(user, cmd); break;
         default: this->reply(ERR_UNKNOWNCOMMAND, user, cmd.command, ""); break;
     }
 }
@@ -133,7 +137,8 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd) {
     Channel*    channel;
     User*       target;
     std::string reply;
-    std::string reason = (cmd.args.size() > 2 && !cmd.args[2].empty()) ? cmd.args[2] : "Kicked by operator";
+    std::string reason =
+        (cmd.args.size() > 2 && !cmd.args[2].empty()) ? cmd.args[2] : "Kicked by operator";
 
     // Checks if channel exists, if user is operator and if the target user is
     // in the channel
@@ -506,5 +511,60 @@ void Server::cmdQuit(User& user, const ParsedCommand& cmd) {
 
     user.quitAllChannels();
 
+    // If user left a channel empty we make sure to delete it
+    for (size_t i = 0; i < channels.size(); i++) {
+        if (channels[i]->getNumberUsers() == 0) { this->rmvChannel(channels[i]); }
+    }
+
     _clients_to_disconnect.push_back(user.getFd());
+}
+
+void Server::cmdWho(User& user, const ParsedCommand& cmd) {
+    std::string target = cmd.args[0];
+
+    if (target[0] == '#') {
+        Channel* channel = this->getChannel(target);
+        if (channel) {
+            std::vector<User*> users = channel->getUsers();
+
+            for (size_t i = 0; i < users.size(); ++i) {
+                User* u = users[i];
+
+                // Determine Status Flags
+                // H = Here, G = Gone (Away)
+                // * = IRCOperator
+                // @ = Channel Operator
+                std::string flags = "H";
+                if (channel->isOperator(*u)) flags += "@";
+
+                // Format: <channel> <username> <host> <server> <nick> <flags> :<hopcount>
+                // <realname> Example: #test guest 127.0.0.1 ft_irc.42.fr guest H@ :0 Real Name
+                std::stringstream ss;
+                ss << "352 " << user.getNick() << " " << target << " " << u->getUsername() << " "
+                   << u->getHostname() << " "
+                   << "ft_irc.42.fr" << " " << u->getNick() << " " << flags << " :0 "
+                   << u->getRealname() << "\r\n";
+
+                std::string msg = ":" + user.getHostname() + " " + ss.str();
+                send(user.getFd(), msg.c_str(), msg.length(), 0);
+            }
+        }
+    }
+
+    // SEND END OF WHO (Mandatory)
+    // Format: 315 <client> <target> :End of WHO list
+    std::string endMsg = ":" + user.getHostname() + " 315 " + user.getNick() + " " + target +
+                         " :End of /WHO list.\r\n";
+    send(user.getFd(), endMsg.c_str(), endMsg.length(), 0);
+}
+
+void Server::cmdPing(User& user, const ParsedCommand& cmd) {
+    if (cmd.args.empty()) {
+        this->reply(ERR_NOORIGIN, user, "", "");
+        return;
+    }
+    std::string reply =
+        ":" + user.getHostname() + " PONG " + user.getHostname() + " :" + cmd.args[0] + "\r\n";
+
+    send(user.getFd(), reply.c_str(), reply.length(), 0);
 }

@@ -45,11 +45,12 @@ public:
     int broadcast(User& source, std::string msg);
 
     // USERS
-    User*       isUserConnected(User& user) const;
-    User*       isUserConnected(const std::string& nick) const;
-    void        addUser(User& user);
-    void        removeUser(User& user);
-    std::string getUserList() const;
+    std::vector<User*> getUsers() const;
+    User*              isUserConnected(User& user) const;
+    User*              isUserConnected(const std::string& nick) const;
+    void               addUser(User& user);
+    void               removeUser(User& user);
+    std::string        getUserList() const;
 
     // OPERATORS
     void addOperator(User& client);
@@ -66,8 +67,8 @@ public:
     std::string getKey() const;
     std::string getTopic() const;
     std::string getMode() const;
-	int         getLimit() const;
-	int			getNumberUsers() const;
+    int         getLimit() const;
+    int         getNumberUsers() const;
     bool        getKeyMode() const;
     bool        getInviteMode() const;
     bool        getTopicMode() const;

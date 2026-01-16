@@ -1,12 +1,13 @@
 #pragma once
 
+#include <cctype>
 #include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
 
+#define ERR_NOORIGIN 409
 #define ERR_UNKNOWNCOMMAND 421
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_UNKNOWNMODE 472
@@ -23,6 +24,8 @@
 #define PASS 10
 #define QUIT 11
 #define CAP 12
+#define WHO 13
+#define PING 14
 
 struct ParsedCommand {
     std::string              command; // e.g., "JOIN"
@@ -42,7 +45,9 @@ void IsValid_MODE(ParsedCommand* pc);
 void IsValid_USER(ParsedCommand* pc);
 void IsValid_PART(ParsedCommand* pc);
 void IsValid_PASS(ParsedCommand* pc);
-void IsValid_QUIT(ParsedCommand *pc);
+void IsValid_QUIT(ParsedCommand* pc);
+void IsValid_PING(ParsedCommand* pc);
+void IsValid_WHO(ParsedCommand* pc);
 
 class Parser {
 private:

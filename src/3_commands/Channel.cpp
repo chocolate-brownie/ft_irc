@@ -36,6 +36,8 @@ int Channel::broadcast(User& source, std::string msg) {
 
 // USERS
 
+std::vector<User*> Channel::getUsers() const { return (_users); }
+
 User* Channel::isUserConnected(User& user) const {
     for (std::vector<User*>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
         if (*it == &user) return (*it);

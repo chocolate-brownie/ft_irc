@@ -15,29 +15,21 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 }
 
 Server::~Server() {
-    // 1. DELETE USERS
-    // We iterate through the map and delete every User object.
-    // When 'delete it->second' runs, it triggers ~User().
-    // ~User() automatically removes the user from all channels.
+    // We delete users first so that when ~User gets called they take out the channels from their
+    // vectors and its then safe for us to delete them too
+
     for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
-        delete it->second; // Deletes the User object
+        delete it->second;
     }
-    _users.clear(); // Clear the map container
-
-    // 2. DELETE CHANNELS
-    // Now that all users are gone, the channels are empty. 
-    // It is safe to delete them.
+    _users.clear();
     for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
-        delete *it; // Deletes the Channel object
+        delete *it;
     }
-    _channels.clear(); // Clear the vector container
+    _channels.clear();
 
-    // 3. CLOSE LISTENER
-    if (_listener != -1) {
-        close(_listener);
-    }
+    if (_listener != -1) { close(_listener); }
 
-    std::cout << "Server shutdown: Memory cleaned." << std::endl;
+    std::cout << "Server shutdown." << std::endl;
 }
 
 void Server::start() {

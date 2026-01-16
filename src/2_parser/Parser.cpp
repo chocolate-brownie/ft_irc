@@ -31,6 +31,8 @@ ParsedCommand Parser::parse(const std::string& input) {
         case PASS: IsValid_PASS(&pc); break;
         case QUIT: IsValid_QUIT(&pc); break;
         case CAP: break;
+        case WHO: IsValid_WHO(&pc); break;
+        case PING: IsValid_PING(&pc); break;
         default: break;
     }
     return pc;
@@ -101,7 +103,9 @@ void IsValidCmd(ParsedCommand* pc) {
         "PART",
         "PASS",
         "QUIT",
-        "CAP"
+        "CAP",
+        "WHO",
+        "PING"
     };
 
     size_t i;
@@ -358,5 +362,23 @@ void IsValid_PASS(ParsedCommand* pc) {
             pc->err = ERR_NEEDMOREPARAMS;
             return;
         }
+    }
+}
+
+// Validates WHO command
+// WHO <mask>
+void IsValid_WHO(ParsedCommand *pc) {
+    if (pc->args.empty()) {
+        pc->err = ERR_NEEDMOREPARAMS;
+        return;
+    }
+}
+
+// Validates PING command
+// PING <token>
+void IsValid_PING(ParsedCommand *pc) {
+    if (pc->args.empty()) {
+        pc->err = ERR_NOORIGIN;
+        return;
     }
 }
