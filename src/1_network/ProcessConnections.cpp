@@ -12,7 +12,7 @@ void Server::handleNewConnection() {
     addrlen = sizeof(remoteaddr);
 
     if ((newfd = accept(_listener, (struct sockaddr*) &remoteaddr, &addrlen)) == -1)
-        std::cerr << "accpet" << std::endl;
+        std::cerr << "accept" << std::endl;
     else {
         if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1) {
             std::cerr << "fcntl failed" << std::endl;
@@ -58,6 +58,7 @@ void Server::handleClientData(int client_fd) {
             } else {
                 reply(parsed.err, *user, "", "");
             }
+			std::cout << "[DEBUG] parsed found error: " << parsed.err << std::endl;
             continue;
         }
 

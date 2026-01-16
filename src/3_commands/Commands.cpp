@@ -133,7 +133,7 @@ void Server::cmdKick(User& user, const ParsedCommand& cmd) {
     Channel*    channel;
     User*       target;
     std::string reply;
-    std::string reason = (cmd.args.size() > 2) ? cmd.args[2] : "Kicked by operator";
+    std::string reason = (cmd.args.size() > 2 && !cmd.args[2].empty()) ? cmd.args[2] : "Kicked by operator";
 
     // Checks if channel exists, if user is operator and if the target user is
     // in the channel

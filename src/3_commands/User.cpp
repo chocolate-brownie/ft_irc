@@ -5,14 +5,27 @@
 // FOR CONSTRUCTOR MAYBE WE HAVE TO PASS _hostname SINCE WE GET IT FROM ACCEPT()
 // BUT IDK YET IF WE RUN IT BEFORE OR AFTER CREATING THE USER OBJ
 User::User(int fd)
-    : _userSocketFd(fd), _hostname("localhost"), _isRegistered(false), _passGiven(false) {}
+    : _userSocketFd(fd), _isRegistered(false), _passGiven(false) {}
 
 User::~User() {
-    close(_userSocketFd);
+    // close(_userSocketFd);
 
-    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    // for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    //     (*it)->removeUser(*this);
+    // _channels.clear();
+	// 1. Notify channels first (while the socket is technically still "open")
+    // Note: We don't use quitAllChannels() here to avoid double-clearing logic, 
+    // but the logic inside the loop is identical.
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++) {
         (*it)->removeUser(*this);
+    }
     _channels.clear();
+
+    // 2. Close the socket LAST
+    if (_userSocketFd != -1) {
+        close(_userSocketFd);
+        _userSocketFd = -1; // Safety practice
+    }
 }
 
 // CHANNELS RELATED

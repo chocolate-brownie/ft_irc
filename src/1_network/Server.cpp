@@ -1,5 +1,7 @@
 #include "../../includes/Server.hpp"
 
+bool Server::Signal = false;
+
 Server::Server(int port, std::string password) : _port(port), _password(password), _fdsize(5) {
     time_t      now = time(0);
     char*       dt  = ctime(&now); // ctime returns a string ending with \n
@@ -12,7 +14,31 @@ Server::Server(int port, std::string password) : _port(port), _password(password
     this->_startTime = timeStr;
 }
 
-Server::~Server() {}
+Server::~Server() {
+    // 1. DELETE USERS
+    // We iterate through the map and delete every User object.
+    // When 'delete it->second' runs, it triggers ~User().
+    // ~User() automatically removes the user from all channels.
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        delete it->second; // Deletes the User object
+    }
+    _users.clear(); // Clear the map container
+
+    // 2. DELETE CHANNELS
+    // Now that all users are gone, the channels are empty. 
+    // It is safe to delete them.
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        delete *it; // Deletes the Channel object
+    }
+    _channels.clear(); // Clear the vector container
+
+    // 3. CLOSE LISTENER
+    if (_listener != -1) {
+        close(_listener);
+    }
+
+    std::cout << "Server shutdown: Memory cleaned." << std::endl;
+}
 
 void Server::start() {
     // Set up and get a listening socket
@@ -29,14 +55,17 @@ void Server::start() {
     std::cout << "🚀 Server listening on port " << _port << "..." << std::endl;
 
     // Main loop
-    for (;;) {
+    while (!Signal) {
         int num_events = poll(_pfds.data(), _pfds.size(), -1);
+
         if (num_events == -1) {
+            if (errno == EINTR) { break; }
             std::cerr << "poll" << std::endl;
-            exit(1);
+            break;
         }
         processConnections();
     }
+    std::cout << "Closing connections..." << std::endl;
 }
 
 struct addrinfo* Server::getAddressInfo() {

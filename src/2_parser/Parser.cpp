@@ -74,10 +74,10 @@ ParsedCommand Parser::split(const std::string& input) {
             std::string rest;
             std::getline(ss, rest); // reads everything remaining
             trailing += rest;
-            if (trailing.empty()) {
-                pc.err = ERR_NEEDMOREPARAMS;
-                return pc;
-            } // Empty trailing parameter
+            // if (trailing.empty()) {
+            //     pc.err = ERR_NEEDMOREPARAMS;
+            //     return pc;
+            // } // Empty trailing parameter
             pc.args.push_back(trailing);
             return pc;
         }

@@ -4,6 +4,8 @@
 #define BACKLOG 10
 
 #include <arpa/inet.h>
+#include <cerrno>
+#include <csignal>
 #include <cstdio>   // IWYU pragma: keep
 #include <cstdlib>  // IWYU pragma: keep
 #include <cstring>  // IWYU pragma: keep
@@ -84,6 +86,8 @@ private:
     std::string   getClientIP(const struct sockaddr_storage& addr) const;
 
 public:
+    static bool Signal; // Static flag for shutdown
+
     Server(int port, std::string password);
     ~Server();
 
