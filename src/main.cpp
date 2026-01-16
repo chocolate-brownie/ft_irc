@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-	// Capture Ctrl+C
+	// Listens for Ctrl+C
     signal(SIGINT, signalHandler); 
     signal(SIGQUIT, signalHandler);
 

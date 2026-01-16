@@ -405,7 +405,6 @@ void Server::cmdPrivmsg(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdNick(User& user, const ParsedCommand& cmd) {
-    // ADDITION 1: Prevent crash on empty NICK command
     if (cmd.args.empty() || cmd.args[0].empty()) {
         this->reply(ERR_NONICKNAMEGIVEN, user, "", "");
         return;
@@ -413,7 +412,6 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
 
     if (this->getUser(cmd.args[0])) {
         this->reply(ERR_NICKNAMEINUSE, user, cmd.args[0], "");
-        // ADDITION 2: Disconnect unregistered users on collision
         if (!user.isRegistered()) { _clients_to_disconnect.push_back(user.getFd()); }
         return;
     }
@@ -437,15 +435,13 @@ void Server::cmdNick(User& user, const ParsedCommand& cmd) {
 }
 
 void Server::cmdUser(User& user, const ParsedCommand& cmd) {
-    // --- START OF MINIMAL ADDITION ---
     // The USER command requires 4 arguments.
     if (cmd.args.size() < 4) {
         this->reply(ERR_NEEDMOREPARAMS, user, cmd.command, "");
-        // Disconnect an unregistered user for malformed commands.
+        // Disconnect an unregistered user for bad format
         if (!user.isRegistered()) { _clients_to_disconnect.push_back(user.getFd()); }
         return;
     }
-    // ---  END OF MINIMAL ADDITION  ---
 
     if (user.isRegistered()) {
         this->reply(ERR_ALREADYREGISTRED, user, "", "");
@@ -485,7 +481,6 @@ void Server::cmdPart(User& user, const ParsedCommand& cmd) {
     user.removeChannel(*channel);
 
     // If the channel has no user left we delete it
-    // NOTE: WE PROBABLY NEED TO FREE SOMETHING SOMEWHERE
     std::string list = channel->getUserList();
     if (list.empty()) this->rmvChannel(channel);
 }
@@ -530,29 +525,25 @@ void Server::cmdWho(User& user, const ParsedCommand& cmd) {
             for (size_t i = 0; i < users.size(); ++i) {
                 User* u = users[i];
 
-                // Determine Status Flags
-                // H = Here, G = Gone (Away)
-                // * = IRCOperator
+                // - Flags -
+                // H = Here, G = Gone
                 // @ = Channel Operator
                 std::string flags = "H";
                 if (channel->isOperator(*u)) flags += "@";
 
                 // Format: <channel> <username> <host> <server> <nick> <flags> :<hopcount>
-                // <realname> Example: #test guest 127.0.0.1 ft_irc.42.fr guest H@ :0 Real Name
-                std::stringstream ss;
-                ss << "352 " << user.getNick() << " " << target << " " << u->getUsername() << " "
-                   << u->getHostname() << " "
-                   << "ft_irc.42.fr" << " " << u->getNick() << " " << flags << " :0 "
-                   << u->getRealname() << "\r\n";
+                // <realname>
+                // Example: #test guest 127.0.0.1 ft_irc.42.fr guest H@ :0 Real Name
+                std::string msg = ":" + user.getHostname() + " 352 " + user.getNick() + " " +
+                                  target + " " + u->getUsername() + " " + u->getHostname() + " " +
+                                  "ft_irc.42.fr " + u->getNick() + " " + flags + " :0 " +
+                                  u->getRealname() + "\r\n";
 
-                std::string msg = ":" + user.getHostname() + " " + ss.str();
                 send(user.getFd(), msg.c_str(), msg.length(), 0);
             }
         }
     }
-
-    // SEND END OF WHO (Mandatory)
-    // Format: 315 <client> <target> :End of WHO list
+    // send End Of /WHO list
     std::string endMsg = ":" + user.getHostname() + " 315 " + user.getNick() + " " + target +
                          " :End of /WHO list.\r\n";
     send(user.getFd(), endMsg.c_str(), endMsg.length(), 0);
