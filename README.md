@@ -18,7 +18,3 @@ Here are the essential documents for our team. Please read them\!
   * **[💡 Project Division Plan](docs/idea.md)**
 
       * A guide on how we can separate the project into logical parts for our team.
-
-  * **[🤖 AI Socratic Tutor Prompt](docs/cs-tutor.md)**
-
-      * A great prompt to use with an AI (like me\!) to get help. It makes the AI ask you guiding questions instead of just giving you the code.
